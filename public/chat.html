@@ -73,6 +73,35 @@
         </div>
     </main>
 
+    <!-- Video Call Modal -->
+    <div id="videoCallModal" class="modal">
+        <div class="modal-content video-call-content">
+            <div class="video-container">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <video id="localVideo" autoplay playsinline muted></video>
+            </div>
+            <div class="call-controls">
+                <button id="muteBtn" class="icon-btn" title="Mute Audio"><i class="fas fa-microphone"></i></button>
+                <button id="cameraBtn" class="icon-btn" title="Toggle Camera"><i class="fas fa-video"></i></button>
+                <button id="endCallBtn" class="icon-btn btn-danger" title="End Call"><i
+                        class="fas fa-phone-slash"></i></button>
+            </div>
+            <div id="incomingCallPopup" class="incoming-call hidden">
+                <div class="caller-info">
+                    <div class="user-avatar" id="callerAvatar">?</div>
+                    <div>
+                        <h3 id="callerName">Unknown</h3>
+                        <p>Incoming Video Call...</p>
+                    </div>
+                </div>
+                <div class="incoming-actions">
+                    <button id="rejectCallBtn" class="icon-btn btn-danger"><i class="fas fa-times"></i></button>
+                    <button id="acceptCallBtn" class="icon-btn btn-success"><i class="fas fa-check"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/theme.js"></script>

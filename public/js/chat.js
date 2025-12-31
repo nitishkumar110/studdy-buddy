@@ -191,15 +191,151 @@ async function openChat(friendId, friendName, friendMajor) {
 
     // Setup call buttons
     document.getElementById('voiceCallBtn').addEventListener('click', () => {
-        alert('Voice call feature coming soon!');
+        alert('Voice call coming soon! Try the video icon for now.');
     });
 
     document.getElementById('videoCallBtn').addEventListener('click', () => {
-        alert('Video call feature coming soon!');
+        startCall(true);
     });
 
     // Load messages
     loadMessages(friendId);
+}
+
+// --- WebRTC Video Call Logic ---
+let peerConnection;
+let localStream;
+let remoteStream;
+const rtcConfig = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' } // Use Google's public STUN server
+    ]
+};
+
+async function startCall(isVideo) {
+    if (!activeChatUser) return;
+
+    document.getElementById('videoCallModal').style.display = 'block';
+
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+        document.getElementById('localVideo').srcObject = localStream;
+    } catch (err) {
+        console.error('Error accessing media:', err);
+        alert('Could not access camera/microphone');
+        return;
+    }
+
+    createPeerConnection();
+
+    // Add local tracks to connection
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    // Create Offer
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    // Send Offer
+    socket.emit('call_user', {
+        userToCall: activeChatUser.id,
+        signalData: offer,
+        from: currentUser.id,
+        name: currentUser.name
+    });
+}
+
+function createPeerConnection() {
+    peerConnection = new RTCPeerConnection(rtcConfig);
+
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate && activeChatUser) {
+            socket.emit('ice_candidate', {
+                to: activeChatUser.id,
+                candidate: event.candidate
+            });
+        }
+    };
+
+    peerConnection.ontrack = (event) => {
+        document.getElementById('remoteVideo').srcObject = event.streams[0];
+    };
+}
+
+// Update Listeners for Call Events
+const originalSetupListeners = setupSocketListeners;
+setupSocketListeners = function () {
+    originalSetupListeners(); // Call original handlers
+
+    socket.on('call_user', async (data) => {
+        // Incoming Call
+        activeChatUser = { id: data.from, name: data.name }; // Set caller as active context
+        const popup = document.getElementById('incomingCallPopup');
+        document.getElementById('callerName').textContent = data.name;
+        popup.classList.remove('hidden');
+        document.getElementById('videoCallModal').style.display = 'block';
+
+        // Store offer to answer later
+        window.incomingOffer = data.signal;
+    });
+
+    socket.on('call_accepted', async (signal) => {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+    });
+
+    socket.on('ice_candidate', async (candidate) => {
+        if (peerConnection) {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+    });
+
+    socket.on('call_rejected', () => {
+        alert('Call rejected');
+        endCall();
+    });
+};
+
+// Handle Incoming Call UI Actions
+document.addEventListener('DOMContentLoaded', () => {
+    // Add these inside the existing DOMContentLoaded or append here
+    document.getElementById('acceptCallBtn')?.addEventListener('click', async () => {
+        document.getElementById('incomingCallPopup').classList.add('hidden');
+
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            document.getElementById('localVideo').srcObject = localStream;
+        } catch (err) {
+            console.error('Error accessing media:', err);
+            return;
+        }
+
+        createPeerConnection();
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(window.incomingOffer));
+
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        socket.emit('answer_call', {
+            signal: answer,
+            to: activeChatUser.id
+        });
+    });
+
+    document.getElementById('rejectCallBtn')?.addEventListener('click', () => {
+        socket.emit('reject_call', { to: activeChatUser.id });
+        document.getElementById('videoCallModal').style.display = 'none';
+        document.getElementById('incomingCallPopup').classList.add('hidden');
+    });
+
+    document.getElementById('endCallBtn')?.addEventListener('click', endCall);
+});
+
+function endCall() {
+    if (peerConnection) peerConnection.close();
+    if (localStream) localStream.getTracks().forEach(track => track.stop());
+    document.getElementById('videoCallModal').style.display = 'none';
+    location.reload(); // Simple cleanup
 }
 
 // Setup Chat Input

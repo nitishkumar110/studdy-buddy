@@ -521,6 +521,25 @@ io.on('connection', (socket) => {
         });
     });
 
+    // --- WebRTC Signaling ---
+
+    socket.on('call_user', (data) => {
+        const { userToCall, signalData, from, name } = data;
+        io.to(`user_${userToCall}`).emit('call_user', { signal: signalData, from, name });
+    });
+
+    socket.on('answer_call', (data) => {
+        io.to(`user_${data.to}`).emit('call_accepted', data.signal);
+    });
+
+    socket.on('ice_candidate', (data) => {
+        io.to(`user_${data.to}`).emit('ice_candidate', data.candidate);
+    });
+
+    socket.on('reject_call', (data) => {
+        io.to(`user_${data.to}`).emit('call_rejected');
+    });
+
     socket.on('disconnect', () => {
         // Find and remove user
         for (let [userId, socketId] of connectedUsers.entries()) {
