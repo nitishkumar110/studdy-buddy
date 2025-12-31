@@ -80,6 +80,14 @@ async function createPost() {
     }
 
     const token = localStorage.getItem('token');
+
+    // Check if token exists
+    if (!token) {
+        alert('You are not logged in. Please login first.');
+        window.location.href = 'login.html';
+        return;
+    }
+
     const formData = new FormData();
     formData.append('content', content);
     if (selectedImage) {
@@ -95,6 +103,18 @@ async function createPost() {
             body: formData
         });
 
+        // Check if response is ok (status 200-299)
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                alert('Your session has expired. Please login again.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+                return;
+            }
+            throw new Error(`Server error: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.success) {
@@ -105,11 +125,11 @@ async function createPost() {
             // Reload feed
             loadFeed();
         } else {
-            alert('Failed to create post');
+            alert(data.message || 'Failed to create post');
         }
     } catch (error) {
         console.error('Create post error:', error);
-        alert('Error creating post');
+        alert('Error creating post: ' + error.message);
     }
 }
 
@@ -123,7 +143,24 @@ async function loadFeed() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
+        // Check if response is ok
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+                return;
+            }
+            throw new Error(`Server error: ${response.status}`);
+        }
+
         const posts = await response.json();
+
+        // Ensure posts is an array
+        if (!Array.isArray(posts)) {
+            console.error('Expected array but got:', posts);
+            throw new Error('Invalid response format');
+        }
 
         if (posts.length === 0) {
             feedContainer.innerHTML = `

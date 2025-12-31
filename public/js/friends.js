@@ -313,9 +313,6 @@ function createFriendCard(friend) {
                 <button class="btn btn-primary message-btn" data-friend-id="${friend.id}">
                     <i class="fas fa-comment"></i> Message
                 </button>
-                <button class="btn btn-secondary call-btn" data-friend-id="${friend.id}">
-                    <i class="fas fa-phone"></i>
-                </button>
                 <button class="btn btn-secondary remove-btn" data-friend-id="${friend.id}">
                     <i class="fas fa-user-minus"></i>
                 </button>
@@ -353,12 +350,6 @@ function attachFriendActions() {
     document.querySelectorAll('.message-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             window.location.href = `chat.html?userId=${btn.dataset.friendId}`;
-        });
-    });
-
-    document.querySelectorAll('.call-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            alert('Video call feature coming soon!');
         });
     });
 
