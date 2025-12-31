@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studdy-Buddy | Find Your Perfect Study Partner</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-book-open-reader"></i> Studdy-Buddy
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="find-buddy.html">Find Buddy</a></li>
+                <li><a href="friends.html">Friends</a></li>
+                <li><a href="feed.html">Feed</a></li>
+                <li><a href="chat.html">Messages</a></li>
+                <li><a href="ai-chat.html" class="highlight-link"><i class="fa-solid fa-robot"></i> AI Mentor</a></li>
+                <li><a href="login.html" class="btn btn-secondary">Login</a></li>
+                <li><a href="register.html" class="btn btn-primary">Join Now</a></li>
+            </ul>
+
+            <div class="nav-controls">
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
+                    <i class="fa-solid fa-palette"></i>
+                </button>
+                <button id="mobile-menu-btn" class="icon-btn mobile-only" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-bg-animation"></div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1 class="animate-fade-in">Master Your Subjects with the Perfect <span class="gradient-text">Study
+                        Buddy</span></h1>
+                <p class="animate-fade-in delay-100">Connect with students worldwide. Form groups, share resources, and
+                    ace your exams together.</p>
+                <div class="hero-btns animate-fade-in delay-200">
+                    <a href="find-buddy.html" class="btn btn-primary btn-lg">Find a Buddy</a>
+                    <a href="groups.html" class="btn btn-glass btn-lg">Explore Groups</a>
+                </div>
+            </div>
+            <div class="hero-visual animate-float delay-300">
+                <!-- Illustration will be CSS/Icon based or placeholder for now -->
+                <div class="floating-card card-1">
+                    <i class="fa-solid fa-code"></i>
+                    <span>Coding</span>
+                </div>
+                <div class="floating-card card-2">
+                    <i class="fa-solid fa-atom"></i>
+                    <span>Physics</span>
+                </div>
+                <div class="floating-card card-3">
+                    <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+                    <div class="user-info">
+                        <span class="name">Sarah joined</span>
+                        <span class="status">Studying Math</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Preview -->
+    <section class="section features">
+        <div class="container">
+            <div class="section-header center">
+                <h2>Why Choose Studdy-Buddy?</h2>
+                <p>The ultimate platform for collaborative learning.</p>
+            </div>
+            <div class="grid grid-3">
+                <div class="feature-card">
+                    <div class="icon-box"><i class="fa-solid fa-user-group"></i></div>
+                    <h3>Smart Matching</h3>
+                    <p>Find partners based on subject, level, and study goals.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-box"><i class="fa-solid fa-video"></i></div>
+                    <h3>Virtual Study Rooms</h3>
+                    <p>Built-in video and chat for seamless collaboration.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-box"><i class="fa-solid fa-calendar-check"></i></div>
+                    <h3>Schedule Planner</h3>
+                    <p>Organize sessions and never miss a study date.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section cta-section">
+        <div class="container">
+            <div class="cta-box glass-panel">
+                <h2>Ready to boost your grades?</h2>
+                <p>Join thousands of students learning together today.</p>
+                <a href="register.html" class="btn btn-primary btn-lg">Get Started Free</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>Studdy-Buddy</h3>
+                    <p>Learning is better together.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <a href="#">About Us</a>
+                    <a href="#">Contact</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+                <div class="footer-social">
+                    <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-discord"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Studdy-Buddy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/background.js"></script>
+    <script src="js/main.js"></script>
+    <!-- Theme Script to prevent flash -->
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</body>
+
+</html>

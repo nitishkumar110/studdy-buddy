@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed | Studdy-Buddy</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/feed.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                Studdy-Buddy
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="find-buddy.html">Find Buddy</a></li>
+                <li><a href="friends.html">Friends</a></li>
+                <li><a href="feed.html" class="active">Feed</a></li>
+                <li><a href="chat.html">Messages</a></li>
+                <li><a href="ai-chat.html">AI Mentor</a></li>
+            </ul>
+            <div class="nav-controls">
+                <button class="icon-btn" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="icon-btn mobile-only" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="feed-page">
+        <div class="container">
+            <div class="feed-layout">
+                <!-- Main Feed -->
+                <div class="feed-main">
+                    <!-- Create Post -->
+                    <div class="create-post-card">
+                        <div class="post-input-wrapper">
+                            <div class="user-avatar" id="userAvatar">U</div>
+                            <textarea id="postContent" placeholder="What's on your mind?" rows="3"></textarea>
+                        </div>
+                        <div class="post-actions">
+                            <label class="upload-btn">
+                                <i class="fas fa-image"></i> Photo
+                                <input type="file" id="postImage" accept="image/*" hidden>
+                            </label>
+                            <button class="btn btn-primary" id="createPostBtn">
+                                <i class="fas fa-paper-plane"></i> Post
+                            </button>
+                        </div>
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+
+                    <!-- Feed Posts -->
+                    <div class="feed-posts" id="feedPosts">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i> Loading feed...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="feed-sidebar">
+                    <div class="sidebar-card">
+                        <h3><i class="fas fa-fire"></i> Trending Topics</h3>
+                        <div class="trending-list">
+                            <div class="trending-item">
+                                <span class="tag">#StudyTips</span>
+                                <span class="count">234 posts</span>
+                            </div>
+                            <div class="trending-item">
+                                <span class="tag">#ExamPrep</span>
+                                <span class="count">189 posts</span>
+                            </div>
+                            <div class="trending-item">
+                                <span class="tag">#GroupStudy</span>
+                                <span class="count">156 posts</span>
+                            </div>
+                            <div class="trending-item">
+                                <span class="tag">#CampusLife</span>
+                                <span class="count">142 posts</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card">
+                        <h3><i class="fas fa-users"></i> Suggested Friends</h3>
+                        <div class="suggested-friends" id="suggestedFriends">
+                            <!-- Suggested friends will load here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="js/feed.js"></script>
+    <script src="js/theme.js"></script>
+</body>
+
+</html>

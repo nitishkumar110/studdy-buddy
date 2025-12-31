@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages | Studdy-Buddy</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                Studdy-Buddy
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="find-buddy.html">Find Buddy</a></li>
+                <li><a href="friends.html">Friends</a></li>
+                <li><a href="feed.html">Feed</a></li>
+                <li><a href="chat.html" class="active">Messages</a></li>
+                <li><a href="ai-chat.html">AI Mentor</a></li>
+            </ul>
+            <div class="nav-controls">
+                <button class="icon-btn" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="icon-btn mobile-only" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="chat-page">
+        <div class="chat-container">
+            <!-- Friends List Sidebar -->
+            <div class="chat-sidebar">
+                <div class="sidebar-header">
+                    <h2>Messages</h2>
+                    <button class="icon-btn" id="newChatBtn">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="friendSearch" placeholder="Search friends...">
+                </div>
+
+                <div class="friends-list" id="friendsList">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Window -->
+            <div class="chat-main" id="chatMain">
+                <div class="empty-chat">
+                    <i class="fas fa-comments"></i>
+                    <h3>Select a friend to start chatting</h3>
+                    <p>Choose from your friends list to begin a conversation</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/theme.js"></script>
+</body>
+
+</html>

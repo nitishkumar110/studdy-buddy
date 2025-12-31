@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mentor | Studdy-Buddy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .chat-layout {
+            display: flex;
+            height: calc(100vh - 80px);
+            /* Adjust based on navbar height */
+            margin-top: 0;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mentor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow-y: auto;
+        }
+
+        .mentor-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .mentor-item:hover {
+            background: var(--bg-body);
+        }
+
+        .mentor-item.active {
+            background: rgba(79, 70, 229, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .mentor-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-body);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-body);
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .message {
+            max-width: 80%;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .msg-content {
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .message.user .msg-content {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .message.bot .msg-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .chat-input-area {
+            padding: 1.5rem 2rem;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border);
+            background: var(--bg-body);
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .typing-indicator {
+            display: none;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: 3.5rem;
+            /* avatar width + gap */
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .chat-layout {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 1rem;
+            }
+
+            .chat-area {
+                height: calc(100vh - 150px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-book-open-reader"></i> Studdy-Buddy
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="find-buddy.html">Find Buddy</a></li>
+                <li><a href="groups.html">Groups</a></li>
+                <li><a href="ai-chat.html" class="active highlight-link"><i class="fa-solid fa-robot"></i> AI Mentor</a>
+                </li>
+            </ul>
+            <div class="nav-controls">
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme"><i
+                        class="fa-solid fa-palette"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="chat-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-brain"></i> Select Mentor
+            </div>
+            <div class="mentor-list">
+                <div class="mentor-item active" onclick="selectMentor('cs')">
+                    <div class="mentor-avatar" style="background: #4F46E5; color: white;"><i
+                            class="fa-solid fa-code"></i></div>
+                    <div>
+                        <div style="font-weight: 600;">CS Mentor</div>
+                        <div style="font-size: 0.8rem; opacity: 0.7;">Algorithms & Web</div>
+                    </div>
+                </div>
+                <div class="mentor-item" onclick="selectMentor('mech')">
+                    <div class="mentor-avatar" style="background: #F59E0B; color: white;"><i
+                            class="fa-solid fa-gear"></i></div>
+                    <div>
+                        <div style="font-weight: 600;">Mech Mentor</div>
+                        <div style="font-size: 0.8rem; opacity: 0.7;">Mechanics & Thermo</div>
+                    </div>
+                </div>
+                <div class="mentor-item" onclick="selectMentor('civil')">
+                    <div class="mentor-avatar" style="background: #10B981; color: white;"><i
+                            class="fa-solid fa-hard-hat"></i></div>
+                    <div>
+                        <div style="font-weight: 600;">Civil Mentor</div>
+                        <div style="font-size: 0.8rem; opacity: 0.7;">Structures & Materials</div>
+                    </div>
+                </div>
+                <div class="mentor-item" onclick="selectMentor('electrical')">
+                    <div class="mentor-avatar" style="background: #EC4899; color: white;"><i
+                            class="fa-solid fa-bolt"></i></div>
+                    <div>
+                        <div style="font-weight: 600;">Electrical Mentor</div>
+                        <div style="font-size: 0.8rem; opacity: 0.7;">Circuits & Signals</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="chat-area">
+            <div class="chat-header">
+                <h3 id="current-mentor-name">CS Mentor</h3>
+                <span class="badge"
+                    style="background: #dcfce7; color: #166534; padding: 0.25rem 0.5rem; border-radius: 1rem; font-size: 0.75rem;">Online</span>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <!-- Welcome Message -->
+                <div class="message bot">
+                    <div class="mentor-avatar" id="current-mentor-avatar" style="background: #4F46E5; color: white;"><i
+                            class="fa-solid fa-code"></i></div>
+                    <div class="msg-content">
+                        Hello! I am your Computer Science Mentor. Ask me about algorithms, web development, or study
+                        resources!
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator">Mentor is thinking...</div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Ask a question..."
+                    autocomplete="off">
+                <button class="btn btn-primary icon-btn" onclick="sendMessage()"><i
+                        class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/ai-chat.js"></script>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</body>
+
+</html>
