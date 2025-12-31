@@ -1,16 +1,18 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const token = localStorage.getItem('token');
+    // const token = localStorage.getItem('token'); // Allow guests to view
     const groupsContainer = document.querySelector('.grid.grid-3');
 
-    if (!token) {
-        window.location.href = 'login.html';
-        return;
-    }
+    // if (!token) {
+    //     window.location.href = 'login.html';
+    //     return;
+    // }
 
     try {
         const response = await fetch('/api/groups', {
-            headers: { 'Authorization': `Bearer ${token}` }
+            // headers: { 'Authorization': `Bearer ${token}` } // Allow public access if backend supports it, else handle 401
         });
+        // Note: We need to update backend to allow public access to GET /api/groups or we handle the error
+
         const groups = await response.json();
 
         if (groups.length === 0) {
@@ -40,6 +42,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function joinGroup(groupId) {
     const token = localStorage.getItem('token');
+
+    if (!token) {
+        alert('Please register or login to join a group!');
+        window.location.href = 'register.html';
+        return;
+    }
+
     try {
         const response = await fetch(`/api/groups/${groupId}/join`, {
             method: 'POST',

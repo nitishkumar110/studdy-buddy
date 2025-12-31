@@ -416,9 +416,10 @@ app.post('/api/chat', (req, res) => {
 
 // --- GROUP ROUTES ---
 
-app.get('/api/groups', authenticateToken, async (req, res) => {
+app.get('/api/groups', async (req, res) => {
     try {
         const result = await query('SELECT * FROM groups ORDER BY created_at DESC');
+        // ... (seeding logic remains same) ...
         // If empty, seed some default groups
         if (result.rows.length === 0) {
             const seedGroups = [
@@ -447,10 +448,57 @@ app.get('/api/groups', authenticateToken, async (req, res) => {
 
 app.post('/api/groups/:id/join', authenticateToken, async (req, res) => {
     try {
-        // In a real app, we would have a group_members table.
-        // For this demo, we just increment the counter since the user wants "No Data Loss" but simple schema.
         await query('UPDATE groups SET members_count = members_count + 1 WHERE id = $1', [req.params.id]);
         res.json({ success: true, message: 'Joined group successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// --- GROUP CHAT ROUTES ---
+
+app.get('/api/groups/:id/messages', authenticateToken, async (req, res) => {
+    try {
+        const messages = await query(`
+            SELECT gm.*, u.name as sender_name, u.avatar_url
+            FROM group_messages gm
+            JOIN users u ON gm.user_id = u.id
+            WHERE gm.group_id = $1
+            ORDER BY gm.created_at ASC
+            LIMIT 100
+        `, [req.params.id]);
+        res.json(messages.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/groups/:id/messages', authenticateToken, async (req, res) => {
+    try {
+        const { content } = req.body;
+        const insertResult = await query(
+            'INSERT INTO group_messages (group_id, user_id, content) VALUES ($1, $2, $3) RETURNING id, created_at',
+            [req.params.id, req.user.id, content]
+        );
+        const newMessage = {
+            id: insertResult.rows[0].id,
+            group_id: req.params.id,
+            user_id: req.user.id,
+            content,
+            created_at: insertResult.rows[0].created_at,
+            sender_name: req.user.name // We need to fetch this or attach it to req.user
+        };
+
+        // Improve name fetching
+        const userRes = await query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        newMessage.sender_name = userRes.rows[0].name;
+
+        // Emit via socket
+        io.to(`group_${req.params.id}`).emit('new_group_message', newMessage);
+
+        res.json({ success: true, message: newMessage });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -519,6 +567,10 @@ io.on('connection', (socket) => {
             userId: data.senderId,
             isTyping: data.isTyping
         });
+    });
+
+    socket.on('join_group', (groupId) => {
+        socket.join(`group_${groupId}`);
     });
 
     // --- WebRTC Signaling ---

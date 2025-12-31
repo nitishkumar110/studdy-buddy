@@ -3,6 +3,8 @@
 let currentUser = null;
 let socket = null;
 let activeChatUser = null;
+let activeChatGroup = null;
+let activeChatType = 'friend'; // 'friend' or 'group'
 let typingTimeout = null;
 
 // Initialize
@@ -27,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load friends list
     loadFriends();
+    loadGroups();
 
     // Check if there's a userId in URL params
     const urlParams = new URLSearchParams(window.location.search);
@@ -43,8 +46,14 @@ function setupSocketListeners() {
             appendMessage(message);
             scrollToBottom();
         }
-        // Update friends list to show new message
         loadFriends();
+    });
+
+    socket.on('new_group_message', (message) => {
+        if (activeChatType === 'group' && activeChatGroup && message.group_id == activeChatGroup.id) {
+            appendMessage(message);
+            scrollToBottom();
+        }
     });
 
     socket.on('message_sent', (message) => {
@@ -378,6 +387,109 @@ function setupChatInput() {
     sendBtn.addEventListener('click', sendMessage);
 }
 
+// Load Groups
+async function loadGroups() {
+    const token = localStorage.getItem('token');
+    const groupsList = document.getElementById('groupsList');
+
+    try {
+        // We use the public endpoint but might need auth if changed back
+        const response = await fetch('/api/groups', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const groups = await response.json();
+
+        if (groups.length === 0) {
+            groupsList.innerHTML = '<p style="padding:1rem;color:var(--text-muted);font-size:0.8rem;">No groups yet.</p>';
+            return;
+        }
+
+        groupsList.innerHTML = groups.map(group => `
+            <div class="friend-item group-item" data-group-id="${group.id}" data-group-name="${group.name}">
+                <div class="user-avatar" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary);">
+                    <i class="${group.icon_class || 'fa-solid fa-users'}"></i>
+                </div>
+                <div class="friend-item-info">
+                    <h4>${group.name}</h4>
+                    <p>${group.members_count} Members</p>
+                </div>
+            </div>
+        `).join('');
+
+        document.querySelectorAll('.group-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const groupId = parseInt(item.dataset.groupId);
+                const groupName = item.dataset.groupName;
+                openGroup(groupId, groupName);
+            });
+        });
+    } catch (err) {
+        console.error('Error loading groups', err);
+    }
+}
+
+async function openGroup(groupId, groupName) {
+    activeChatType = 'group';
+    activeChatGroup = { id: groupId, name: groupName };
+    activeChatUser = null;
+
+    // Join Socket Room
+    socket.emit('join_group', groupId);
+
+    // Update active UI
+    document.querySelectorAll('.friend-item').forEach(i => i.classList.remove('active'));
+    document.querySelector(`.group-item[data-group-id="${groupId}"]`)?.classList.add('active');
+
+    // Build Chat UI
+    const chatMain = document.getElementById('chatMain');
+    chatMain.innerHTML = `
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="user-avatar" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary);"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <h3>${groupName}</h3>
+                    <p>Group Chat</p>
+                </div>
+            </div>
+             <div class="chat-header-actions">
+                <button class="icon-btn" onclick="alert('Group call coming soon!')"><i class="fas fa-phone"></i></button>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+             <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading messages...</div>
+        </div>
+        <div class="chat-input">
+            <div class="input-wrapper">
+                <textarea id="messageInput" placeholder="Type a message to group..." rows="1"></textarea>
+                <div class="input-actions">
+                    <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    setupChatInput();
+
+    // Load Messages
+    try {
+        const res = await fetch(`/api/groups/${groupId}/messages`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const messages = await res.json();
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = '';
+
+        if (messages.length === 0) {
+            container.innerHTML = '<div class="empty-chat"><p>No messages yet.</p></div>';
+        } else {
+            messages.forEach(msg => appendMessage(msg));
+            scrollToBottom();
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 // Load Messages
 async function loadMessages(friendId) {
     const token = localStorage.getItem('token');
@@ -417,21 +529,34 @@ function sendMessage() {
     if (!content || !activeChatUser) return;
 
     // Send via socket
-    socket.emit('send_message', {
-        senderId: currentUser.id,
-        receiverId: activeChatUser.id,
-        content: content
-    });
+    // Send via socket
+    if (activeChatType === 'friend') {
+        socket.emit('send_message', {
+            senderId: currentUser.id,
+            receiverId: activeChatUser.id,
+            content: content
+        });
+        // Create temporary message
+        const tempMessage = {
+            sender_id: currentUser.id,
+            receiver_id: activeChatUser.id,
+            content: content,
+            created_at: new Date().toISOString()
+        };
+        appendMessage(tempMessage);
 
-    // Create temporary message
-    const tempMessage = {
-        sender_id: currentUser.id,
-        receiver_id: activeChatUser.id,
-        content: content,
-        created_at: new Date().toISOString()
-    };
-
-    appendMessage(tempMessage);
+    } else if (activeChatType === 'group') {
+        // Send via API for groups (socket emission handled by server to ensure room delivery)
+        fetch(`/api/groups/${activeChatGroup.id}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ content })
+        }).catch(err => console.error(err));
+        // We will receive our own message via socket event 'new_group_message'
+    }
 
     // Clear input
     messageInput.value = '';
@@ -462,9 +587,16 @@ function appendMessage(message) {
 // Create Message HTML
 function createMessageHTML(message) {
     const isSent = message.sender_id === currentUser.id;
-    const initials = isSent ?
-        currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase() :
-        activeChatUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    let initials = 'ME';
+    if (!isSent) {
+        if (message.sender_name) {
+            initials = message.sender_name.split(' ').map(n => n[0]).join('').toUpperCase();
+        } else if (activeChatUser) {
+            initials = activeChatUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        }
+    } else {
+        initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    }
 
     const time = new Date(message.created_at).toLocaleTimeString('en-US', {
         hour: 'numeric',
