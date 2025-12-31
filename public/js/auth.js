@@ -14,10 +14,10 @@ async function handleRegister(event) {
     // Extract values based on assumed input order or logic since IDs weren't strictly standard in HTML yet
     // But we will be adding IDs to inputs in the HTML modification step.
     // For robustness, let's use querySelector within the form
-    const nameInput = form.querySelector('input[placeholder="John Doe"]');
-    const emailInput = form.querySelector('input[type="email"]');
-    const passwordInput = form.querySelector('input[type="password"]');
-    const majorInput = form.querySelector('input[placeholder="e.g. Computer Science"]');
+    const nameInput = document.getElementById('reg-name');
+    const emailInput = document.getElementById('reg-email');
+    const passwordInput = document.getElementById('reg-password');
+    const majorInput = document.getElementById('reg-major');
 
     const payload = {
         name: nameInput.value,
@@ -38,9 +38,17 @@ async function handleRegister(event) {
         const data = await response.json();
 
         if (data.success) {
-            showAlert('Registration successful! Redirecting to login...', 'success');
+            // Save token and user info to auto-login after registration
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify({
+                id: data.userId,
+                email: payload.email,
+                name: payload.name,
+                major: payload.major
+            }));
+            showAlert('Registration successful! Redirecting...', 'success');
             setTimeout(() => {
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
             }, 1000);
         } else {
             showAlert(data.message || 'Registration failed', 'error');
@@ -73,8 +81,9 @@ async function handleLogin(event) {
         const data = await response.json();
 
         if (data.success) {
-            // Save user info
+            // Save user info and token
             localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
             showAlert('Login successful!', 'success');
             setTimeout(() => {
                 window.location.href = 'index.html'; // Or dashboard
