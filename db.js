@@ -74,6 +74,20 @@ const initDb = async () => {
         `);
 
         await client.query(`
+            CREATE TABLE IF NOT EXISTS groups (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                subject TEXT,
+                icon_class TEXT DEFAULT 'fa-solid fa-users',
+                members_count INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'Active',
+                created_by INTEGER REFERENCES users(id),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await client.query(`
             CREATE TABLE IF NOT EXISTS notifications (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

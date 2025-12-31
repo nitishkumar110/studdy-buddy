@@ -101,87 +101,8 @@
         </div>
 
         <div class="grid grid-3">
-            <!-- Group 1 -->
-            <div class="group-card">
-                <span class="status-badge">Active</span>
-                <div class="group-icon"><i class="fa-brands fa-python"></i></div>
-                <h3>Python Beginners</h3>
-                <p class="text-muted">Weekly coding challenges and peer review for Python basics.</p>
-                <div class="group-meta">
-                    <span><i class="fa-solid fa-users"></i> 12 Members</span>
-                    <span><i class="fa-solid fa-globe"></i> English</span>
-                </div>
-                <button class="btn btn-primary">Join Group</button>
-            </div>
-
-            <!-- Group 2 -->
-            <div class="group-card">
-                <span class="status-badge">Recruiting</span>
-                <div class="group-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--accent)"><i
-                        class="fa-solid fa-flask"></i></div>
-                <h3>Organic Chemistry Prep</h3>
-                <p class="text-muted">Preparing for finals? Let's master mechanisms together.</p>
-                <div class="group-meta">
-                    <span><i class="fa-solid fa-users"></i> 5 Members</span>
-                    <span><i class="fa-solid fa-video"></i> Zoom</span>
-                </div>
-                <button class="btn btn-primary">Join Group</button>
-            </div>
-
-            <!-- Group 3 -->
-            <div class="group-card">
-                <span class="status-badge">Private</span>
-                <div class="group-icon" style="background: rgba(79, 70, 229, 0.1); color: var(--primary)"><i
-                        class="fa-solid fa-calculator"></i></div>
-                <h3>Calculus II Warriors</h3>
-                <p class="text-muted">Deep dive into integrals and series. Serious inquiries only.</p>
-                <div class="group-meta">
-                    <span><i class="fa-solid fa-users"></i> 3/5 Members</span>
-                    <span><i class="fa-solid fa-university"></i> Uni Level</span>
-                </div>
-                <button class="btn btn-secondary">Request Access</button>
-            </div>
-
-            <!-- Group 4 -->
-            <div class="group-card">
-                <span class="status-badge">Active</span>
-                <div class="group-icon" style="background: rgba(236, 72, 153, 0.1); color: #EC4899"><i
-                        class="fa-solid fa-language"></i></div>
-                <h3>Spanish Conversation</h3>
-                <p class="text-muted">Practice speaking Spanish casually every weekend.</p>
-                <div class="group-meta">
-                    <span><i class="fa-solid fa-users"></i> 24 Members</span>
-                    <span><i class="fa-solid fa-microphone"></i> Discord</span>
-                </div>
-                <button class="btn btn-primary">Join Group</button>
-            </div>
-
-            <!-- Group 5 -->
-            <div class="group-card">
-                <span class="status-badge">Active</span>
-                <div class="group-icon" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6"><i
-                        class="fa-solid fa-database"></i></div>
-                <h3>Data Science Hub</h3>
-                <p class="text-muted">Sharing resources on ML, AI, and Big Data.</p>
-                <div class="group-meta">
-                    <span><i class="fa-solid fa-users"></i> 45 Members</span>
-                    <span><i class="fa-solid fa-calendar"></i> Monthly</span>
-                </div>
-                <button class="btn btn-primary">Join Group</button>
-            </div>
-
-            <!-- Group 6 -->
-            <div class="group-card">
-                <span class="status-badge">New</span>
-                <div class="group-icon"><i class="fa-solid fa-book"></i></div>
-                <h3>Literature Club</h3>
-                <p class="text-muted">Analyzing classic novels and poetry.</p>
-                <div class="group-meta">
-                    <span><i class="fa-solid fa-users"></i> 8 Members</span>
-                    <span><i class="fa-regular fa-clock"></i> Weekly</span>
-                </div>
-                <button class="btn btn-primary">Join Group</button>
-            </div>
+            <!-- Groups will be loaded here dynamically -->
+            <p style="text-align: center; grid-column: 1/-1;">Loading groups...</p>
         </div>
     </div>
 
@@ -195,6 +116,7 @@
     </footer>
 
     <script src="js/main.js"></script>
+    <script src="js/groups.js"></script>
     <script>
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);

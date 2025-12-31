@@ -414,6 +414,49 @@ app.post('/api/chat', (req, res) => {
     }, 1000);
 });
 
+// --- GROUP ROUTES ---
+
+app.get('/api/groups', authenticateToken, async (req, res) => {
+    try {
+        const result = await query('SELECT * FROM groups ORDER BY created_at DESC');
+        // If empty, seed some default groups
+        if (result.rows.length === 0) {
+            const seedGroups = [
+                { name: 'Python Beginners', subject: 'CS', description: 'Weekly coding challenges and peer review for Python basics.', icon: 'fa-brands fa-python', status: 'Active' },
+                { name: 'Organic Chemistry Prep', subject: 'Chemistry', description: "Preparing for finals? Let's master mechanisms together.", icon: 'fa-solid fa-flask', status: 'Recruiting' },
+                { name: 'Calculus II Warriors', subject: 'Math', description: 'Deep dive into integrals and series. Serious inquiries only.', icon: 'fa-solid fa-calculator', status: 'Private' },
+                { name: 'Spanish Conversation', subject: 'Language', description: 'Practice speaking Spanish casually every weekend.', icon: 'fa-solid fa-language', status: 'Active' },
+                { name: 'Data Science Hub', subject: 'CS', description: 'Sharing resources on ML, AI, and Big Data.', icon: 'fa-solid fa-database', status: 'Active' }
+            ];
+
+            for (const g of seedGroups) {
+                await query(
+                    'INSERT INTO groups (name, subject, description, icon_class, status, members_count) VALUES ($1, $2, $3, $4, $5, $6)',
+                    [g.name, g.subject, g.description, g.icon, g.status, Math.floor(Math.random() * 20) + 1]
+                );
+            }
+            const seeded = await query('SELECT * FROM groups ORDER BY created_at DESC');
+            return res.json(seeded.rows);
+        }
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/api/groups/:id/join', authenticateToken, async (req, res) => {
+    try {
+        // In a real app, we would have a group_members table.
+        // For this demo, we just increment the counter since the user wants "No Data Loss" but simple schema.
+        await query('UPDATE groups SET members_count = members_count + 1 WHERE id = $1', [req.params.id]);
+        res.json({ success: true, message: 'Joined group successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 // --- BUDDIES ROUTE (Legacy) ---
 // Kept for backward compatibility if any old frontend code checks it, or just useful for debugging
 app.get('/api/buddies', async (req, res) => {
