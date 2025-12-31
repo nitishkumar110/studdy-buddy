@@ -31,13 +31,42 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFriends();
     loadGroups();
 
-    // Check if there's a userId in URL params
+    // Check for URL params
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('userId');
+    const groupId = urlParams.get('groupId');
+
     if (userId) {
         setTimeout(() => openChat(parseInt(userId)), 500);
+    } else if (groupId) {
+        setTimeout(() => openGroup(parseInt(groupId)), 500);
     }
 });
+
+// Handle browser back/forward buttons
+window.onpopstate = (event) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId');
+    const groupId = urlParams.get('groupId');
+
+    if (userId) {
+        openChat(parseInt(userId));
+    } else if (groupId) {
+        openGroup(parseInt(groupId));
+    } else {
+        // Reset to empty state if no ID in URL
+        activeChatUser = null;
+        activeChatGroup = null;
+        document.getElementById('chatMain').innerHTML = `
+            <div class="empty-chat">
+                <i class="fas fa-comments"></i>
+                <h3>Select a friend to start chatting</h3>
+                <p>Choose from your friends list to begin a conversation</p>
+            </div>
+        `;
+        document.querySelectorAll('.friend-item').forEach(i => i.classList.remove('active'));
+    }
+};
 
 // Setup Socket Listeners
 function setupSocketListeners() {
@@ -139,6 +168,12 @@ async function openChat(friendId, friendName, friendMajor) {
     }
 
     activeChatUser = { id: friendId, name: friendName, major: friendMajor };
+    activeChatType = 'friend';
+    activeChatGroup = null;
+
+    // Update URL without refreshing
+    const newUrl = `${window.location.pathname}?userId=${friendId}`;
+    window.history.pushState({ userId: friendId, type: 'friend' }, '', newUrl);
 
     // Update active state in sidebar
     document.querySelectorAll('.friend-item').forEach(item => {
@@ -429,9 +464,23 @@ async function loadGroups() {
 }
 
 async function openGroup(groupId, groupName) {
+    if (!groupName) {
+        try {
+            const res = await fetch('/api/groups');
+            const groups = await res.json();
+            const group = groups.find(g => g.id == groupId);
+            groupName = group ? group.name : 'Unknown Group';
+        } catch (e) {
+            groupName = 'Group';
+        }
+    }
     activeChatType = 'group';
     activeChatGroup = { id: groupId, name: groupName };
     activeChatUser = null;
+
+    // Update URL without refreshing
+    const newUrl = `${window.location.pathname}?groupId=${groupId}`;
+    window.history.pushState({ groupId: groupId, type: 'group' }, '', newUrl);
 
     // Join Socket Room
     socket.emit('join_group', groupId);

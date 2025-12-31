@@ -19,8 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         renderBuddies(allUsers);
 
-        // Add event listener for auto-filter
+        // Add event listeners for auto-filter
         document.getElementById('subjectFilter')?.addEventListener('change', applyFilter);
+        document.getElementById('nameSearch')?.addEventListener('input', applyFilter);
 
     } catch (error) {
         console.error('Error fetching buddies:', error);
@@ -30,20 +31,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function applyFilter() {
     const subject = document.getElementById('subjectFilter').value;
+    const nameSearch = document.getElementById('nameSearch').value.toLowerCase();
 
-    if (subject === 'All') {
-        renderBuddies(allUsers);
-        return;
+    let filtered = allUsers;
+
+    // Filter by subject
+    if (subject !== 'All') {
+        const search = subject.toLowerCase();
+        filtered = filtered.filter(user => {
+            const major = (user.major || '').toLowerCase();
+            if (search === 'computer science') return major.includes('comp') || major.includes('code') || major.includes('soft');
+            return major.includes(search) || major.includes(search.split(' ')[0]);
+        });
     }
 
-    const filtered = allUsers.filter(user => {
-        const major = (user.major || '').toLowerCase();
-        const search = subject.toLowerCase();
-
-        // Simple mapping/matching
-        if (search === 'computer science') return major.includes('comp') || major.includes('code') || major.includes('soft');
-        return major.includes(search) || major.includes(search.split(' ')[0]); // e.g. "Civil" matches "Civil Engineering"
-    });
+    // Filter by name
+    if (nameSearch) {
+        filtered = filtered.filter(user => (user.name || '').toLowerCase().includes(nameSearch));
+    }
 
     renderBuddies(filtered);
 }

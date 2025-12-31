@@ -19,6 +19,7 @@
     <!-- Styles -->
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/home.css">
 </head>
 
 <body>
@@ -114,6 +115,24 @@
         </div>
     </section>
 
+    <!-- Recent Posts Section -->
+    <section class="section recent-posts">
+        <div class="container">
+            <div class="section-header center">
+                <h2>Recent Posts from the Community</h2>
+                <p>See what students are sharing and learning together.</p>
+            </div>
+            <div class="posts-grid" id="homePosts">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading posts...
+                </div>
+            </div>
+            <div class="center" style="margin-top: 2rem;">
+                <a href="feed.html" class="btn btn-primary">View All Posts</a>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="section cta-section">
         <div class="container">
@@ -153,6 +172,7 @@
 
     <!-- Scripts -->
     <script src="js/background.js"></script>
+    <script src="js/home.js"></script>
     <script src="js/main.js"></script>
     <!-- Theme Script to prevent flash -->
     <script>

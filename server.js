@@ -309,6 +309,30 @@ app.get('/api/posts/feed', authenticateToken, async (req, res) => {
     }
 });
 
+// Public endpoint for recent posts (for home page)
+app.get('/api/posts/recent', async (req, res) => {
+    try {
+        const posts = await query(`
+            SELECT p.*, u.name, u.major,
+                (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes_count
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            ORDER BY p.created_at DESC
+            LIMIT 6
+        `);
+
+        const formattedPosts = posts.rows.map(post => ({
+            ...post,
+            likes_count: parseInt(post.likes_count)
+        }));
+
+        res.json(formattedPosts);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 app.post('/api/posts/:id/like', authenticateToken, async (req, res) => {
     try {
         const existing = await query('SELECT * FROM post_likes WHERE post_id = $1 AND user_id = $2', [req.params.id, req.user.id]);
@@ -415,6 +439,20 @@ app.post('/api/chat', (req, res) => {
 });
 
 // --- GROUP ROUTES ---
+
+app.post('/api/groups', authenticateToken, async (req, res) => {
+    const { name, subject, description, icon_class } = req.body;
+    try {
+        const result = await query(
+            'INSERT INTO groups (name, subject, description, icon_class, status, members_count) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [name, subject, description, icon_class || 'fa-solid fa-users', 'Active', 1]
+        );
+        res.json({ success: true, group: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 
 app.get('/api/groups', async (req, res) => {
     try {

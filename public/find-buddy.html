@@ -116,6 +116,9 @@
         </div>
 
         <div class="filter-bar">
+            <!-- Name Search -->
+            <input type="text" id="nameSearch" class="filter-input" placeholder="Search by name...">
+
             <!-- Search by Subject Dropdown -->
             <select id="subjectFilter" class="filter-input">
                 <option value="All">All Subjects</option>
@@ -130,7 +133,7 @@
                 <option value="Medical">Medical</option>
             </select>
 
-            <button class="btn btn-primary" onclick="applyFilter()">Filter</button>
+            <button class="btn btn-primary" onclick="applyFilter()">Search</button>
         </div>
 
         <div class="grid grid-3" id="buddy-grid">

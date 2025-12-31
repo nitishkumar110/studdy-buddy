@@ -1,22 +1,67 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // const token = localStorage.getItem('token'); // Allow guests to view
-    const groupsContainer = document.querySelector('.grid.grid-3');
+    const groupsContainer = document.getElementById('groups-grid');
+    const createBtn = document.getElementById('createGroupBtn');
+    const modal = document.getElementById('createGroupModal');
+    const closeModal = document.getElementById('closeModal');
+    const createForm = document.getElementById('createGroupForm');
 
-    // if (!token) {
-    //     window.location.href = 'login.html';
-    //     return;
-    // }
+    // Modal logic
+    createBtn?.addEventListener('click', () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please login to create a group!');
+            window.location.href = 'login.html';
+            return;
+        }
+        modal.style.display = 'block';
+    });
+
+    closeModal?.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+
+    // Create Group logic
+    createForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+        const payload = {
+            name: document.getElementById('groupName').value,
+            subject: document.getElementById('groupSubject').value,
+            description: document.getElementById('groupDescription').value
+        };
+
+        try {
+            const res = await fetch('/api/groups', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Group created successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
 
     try {
-        const response = await fetch('/api/groups', {
-            // headers: { 'Authorization': `Bearer ${token}` } // Allow public access if backend supports it, else handle 401
-        });
-        // Note: We need to update backend to allow public access to GET /api/groups or we handle the error
-
+        const response = await fetch('/api/groups');
         const groups = await response.json();
 
         if (groups.length === 0) {
-            groupsContainer.innerHTML = '<p class="text-center">No groups found.</p>';
+            groupsContainer.innerHTML = '<p class="text-center" style="grid-column: 1/-1;">No groups found.</p>';
             return;
         }
 
@@ -36,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (err) {
         console.error('Error fetching groups:', err);
-        groupsContainer.innerHTML = '<p class="text-center text-danger">Failed to load groups.</p>';
+        groupsContainer.innerHTML = '<p class="text-center text-danger" style="grid-column: 1/-1;">Failed to load groups.</p>';
     }
 });
 
@@ -57,8 +102,8 @@ async function joinGroup(groupId) {
         const result = await response.json();
 
         if (result.success) {
-            alert('Joined group successfully! (You would be added to a chat in a full version)');
-            location.reload(); // Refresh to show updated member count
+            alert('Joined group successfully! Redirecting to group chat...');
+            window.location.href = `chat.html?groupId=${groupId}`;
         } else {
             alert('Failed to join: ' + result.message);
         }
