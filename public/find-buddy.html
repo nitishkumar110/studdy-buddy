@@ -116,14 +116,21 @@
         </div>
 
         <div class="filter-bar">
-            <input type="text" class="filter-input" placeholder="Search by subject (e.g. Math, Coding)...">
-            <select class="filter-input">
-                <option>All Levels</option>
-                <option>Beginner</option>
-                <option>Intermediate</option>
-                <option>Advanced</option>
+            <!-- Search by Subject Dropdown -->
+            <select id="subjectFilter" class="filter-input">
+                <option value="All">All Subjects</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Mechanical">Mechanical Engineering</option>
+                <option value="Civil">Civil Engineering</option>
+                <option value="Electrical">Electrical Engineering</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Physics">Physics</option>
+                <option value="Math">Mathematics</option>
+                <option value="Arts">Arts & History</option>
+                <option value="Medical">Medical</option>
             </select>
-            <button class="btn btn-primary">Search</button>
+
+            <button class="btn btn-primary" onclick="applyFilter()">Filter</button>
         </div>
 
         <div class="grid grid-3" id="buddy-grid">

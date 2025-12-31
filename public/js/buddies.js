@@ -1,9 +1,9 @@
+let allUsers = [];
+
 document.addEventListener('DOMContentLoaded', async () => {
     const grid = document.querySelector('.grid');
     if (!grid) return;
 
-    // Clear existing static cards (optional, if we want to remove hardcoded ones)
-    // For now, let's Replace the entire grid content with a loading state or just clear it.
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p>Loading buddies...</p></div>';
 
     try {
@@ -14,26 +14,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentUserData = localStorage.getItem('user');
         const currentUser = currentUserData ? JSON.parse(currentUserData) : null;
 
-        grid.innerHTML = ''; // Clear loading
+        // Store globally for filtering
+        allUsers = currentUser ? users.filter(u => u.id !== currentUser.id) : users;
 
-        if (users.length === 0) {
-            grid.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center;">No buddies found yet. Be the first!</p>';
-            return;
-        }
+        renderBuddies(allUsers);
 
-        users.forEach(user => {
-            // Filter out self
-            if (currentUser && user.id === currentUser.id) return;
-
-            const card = createProfileCard(user);
-            grid.appendChild(card);
-        });
+        // Add event listener for auto-filter
+        document.getElementById('subjectFilter')?.addEventListener('change', applyFilter);
 
     } catch (error) {
         console.error('Error fetching buddies:', error);
         grid.innerHTML = '<p class="text-error" style="grid-column: 1/-1; text-align: center;">Failed to load buddies. Please try again later.</p>';
     }
 });
+
+function applyFilter() {
+    const subject = document.getElementById('subjectFilter').value;
+
+    if (subject === 'All') {
+        renderBuddies(allUsers);
+        return;
+    }
+
+    const filtered = allUsers.filter(user => {
+        const major = (user.major || '').toLowerCase();
+        const search = subject.toLowerCase();
+
+        // Simple mapping/matching
+        if (search === 'computer science') return major.includes('comp') || major.includes('code') || major.includes('soft');
+        return major.includes(search) || major.includes(search.split(' ')[0]); // e.g. "Civil" matches "Civil Engineering"
+    });
+
+    renderBuddies(filtered);
+}
+
+function renderBuddies(users) {
+    const grid = document.querySelector('.grid');
+    grid.innerHTML = '';
+
+    if (users.length === 0) {
+        grid.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center;">No buddies found for this subject.</p>';
+        return;
+    }
+
+    users.forEach(user => {
+        const card = createProfileCard(user);
+        grid.appendChild(card);
+    });
+}
 
 function createProfileCard(user) {
     const card = document.createElement('div');
