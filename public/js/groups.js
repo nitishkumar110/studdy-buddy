@@ -1,5 +1,20 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // const token = localStorage.getItem('token'); // Allow guests to view
+    // Check authentication and update UI
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    const authBtn = document.getElementById('authBtn');
+
+    if (token && user) {
+        authBtn.textContent = 'Logout';
+        authBtn.href = '#';
+        authBtn.onclick = (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        };
+    }
+
     const groupsContainer = document.getElementById('groups-grid');
     const createBtn = document.getElementById('createGroupBtn');
     const modal = document.getElementById('createGroupModal');

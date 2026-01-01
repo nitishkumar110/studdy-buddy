@@ -575,9 +575,11 @@ function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
 
-    if (!content || !activeChatUser) return;
+    // Check if we have an active chat (either friend or group)
+    if (!content) return;
+    if (activeChatType === 'friend' && !activeChatUser) return;
+    if (activeChatType === 'group' && !activeChatGroup) return;
 
-    // Send via socket
     // Send via socket
     if (activeChatType === 'friend') {
         socket.emit('send_message', {
