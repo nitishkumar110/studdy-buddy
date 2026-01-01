@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Studdy-Buddy</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-book-open-reader"></i> Studdy-Buddy
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="find-buddy.html">Find Buddy</a></li>
+                <li><a href="friends.html">Friends</a></li>
+                <li><a href="feed.html">Feed</a></li>
+                <li><a href="chat.html">Messages</a></li>
+                <li><a href="ai-chat.html" class="highlight-link"><i class="fa-solid fa-robot"></i> AI Mentor</a></li>
+                <li><a href="profile.html" class="active">Profile</a></li>
+                <li><a href="login.html" class="btn btn-secondary" id="authBtn">Login</a></li>
+            </ul>
+
+            <div class="nav-controls">
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
+                    <i class="fa-solid fa-palette"></i>
+                </button>
+                <button id="mobile-menu-btn" class="icon-btn mobile-only" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Section -->
+    <section class="section profile-section">
+        <div class="container">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-cover"></div>
+                <div class="profile-info-wrapper">
+                    <div class="profile-avatar-container">
+                        <img src="/assets/default-avatar.png" alt="Profile" class="profile-avatar" id="profileAvatar">
+                        <button class="avatar-upload-btn" id="avatarUploadBtn" title="Change profile picture">
+                            <i class="fa-solid fa-camera"></i>
+                        </button>
+                        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="profile-info">
+                        <h1 class="profile-name" id="profileName">Loading...</h1>
+                        <p class="profile-major" id="profileMajor">Student</p>
+                        <p class="profile-quote" id="profileQuote">"Your study journey starts here"</p>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="btn btn-primary" id="editProfileBtn">
+                            <i class="fa-solid fa-pen"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Content -->
+            <div class="profile-content">
+                <!-- About Section -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-user"></i> About Me</h2>
+                    </div>
+                    <div class="card-body">
+                        <p id="profileBio">No bio added yet.</p>
+                    </div>
+                </div>
+
+                <!-- Interests Section -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-heart"></i> Interests</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="tags-container" id="interestsContainer">
+                            <span class="tag">Add your interests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-star"></i> Skills</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="tags-container" id="skillsContainer">
+                            <span class="tag">Add your skills</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resume Section -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-file-pdf"></i> Resume</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="resumeContainer">
+                            <p class="text-muted">No resume uploaded yet.</p>
+                            <button class="btn btn-secondary" id="uploadResumeBtn">
+                                <i class="fa-solid fa-upload"></i> Upload Resume
+                            </button>
+                            <input type="file" id="resumeInput" accept=".pdf,.doc,.docx" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Links Section -->
+                <div class="profile-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-link"></i> Social Links</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="social-links" id="socialLinksContainer">
+                            <p class="text-muted">No social links added yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal" id="editProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Profile</h2>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label for="editName">Name</label>
+                        <input type="text" id="editName" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editMajor">Major</label>
+                        <input type="text" id="editMajor" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editQuote">Quote / Tagline</label>
+                        <input type="text" id="editQuote" class="form-control"
+                            placeholder="Your personal motto or tagline">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editBio">Bio</label>
+                        <textarea id="editBio" class="form-control" rows="4"
+                            placeholder="Tell us about yourself..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editInterests">Interests (comma-separated)</label>
+                        <input type="text" id="editInterests" class="form-control"
+                            placeholder="e.g., Coding, Music, Sports">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editSkills">Skills (comma-separated)</label>
+                        <input type="text" id="editSkills" class="form-control"
+                            placeholder="e.g., Python, JavaScript, Design">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Social Links</label>
+                        <div class="social-inputs">
+                            <div class="input-with-icon">
+                                <i class="fa-brands fa-github"></i>
+                                <input type="url" id="editGithub" class="form-control" placeholder="GitHub URL">
+                            </div>
+                            <div class="input-with-icon">
+                                <i class="fa-brands fa-linkedin"></i>
+                                <input type="url" id="editLinkedin" class="form-control" placeholder="LinkedIn URL">
+                            </div>
+                            <div class="input-with-icon">
+                                <i class="fa-brands fa-twitter"></i>
+                                <input type="url" id="editTwitter" class="form-control" placeholder="Twitter URL">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/background.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

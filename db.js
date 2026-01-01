@@ -26,6 +26,12 @@ const initDb = async () => {
                 major TEXT,
                 bio TEXT,
                 avatar_url TEXT,
+                profile_image TEXT,
+                quote TEXT,
+                resume_url TEXT,
+                interests TEXT,
+                skills TEXT,
+                social_links TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);

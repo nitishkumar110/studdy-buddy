@@ -6,7 +6,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
-const { query, initDb } = require('./db'); // Use new Postgres DB module
+const { query, initDb } = require('./database'); // Smart DB adapter (SQLite/PostgreSQL)
 const aiLogic = require('./ai-logic');
 
 const app = express();
@@ -107,8 +107,8 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
     const { q } = req.query;
     try {
         const result = await query(
-            'SELECT id, name, major, bio FROM users WHERE (name ILIKE $1 OR major ILIKE $2) AND id != $3 LIMIT 20',
-            [`%${q}%`, `%${q}%`, req.user.id] // ILIKE for case-insensitive search
+            'SELECT id, name, major, bio FROM users WHERE (name LIKE $1 OR major LIKE $2) AND id != $3 LIMIT 20',
+            [`%${q}%`, `%${q}%`, req.user.id]
         );
         res.json(result.rows);
     } catch (err) {
@@ -129,6 +129,81 @@ app.get('/api/users/:id', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// Get user profile (public info)
+app.get('/api/users/profile/:id', authenticateToken, async (req, res) => {
+    try {
+        const result = await query(
+            'SELECT id, name, major, bio, profile_image, quote, resume_url, interests, skills, social_links, created_at FROM users WHERE id = $1',
+            [req.params.id]
+        );
+        const user = result.rows[0];
+        if (user) {
+            // Parse JSON fields
+            if (user.interests) user.interests = JSON.parse(user.interests);
+            if (user.skills) user.skills = JSON.parse(user.skills);
+            if (user.social_links) user.social_links = JSON.parse(user.social_links);
+            res.json(user);
+        } else {
+            res.status(404).json({ success: false, message: 'User not found' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// Update user profile
+app.put('/api/users/profile', authenticateToken, async (req, res) => {
+    const { name, major, bio, quote, interests, skills, social_links } = req.body;
+    try {
+        // Convert arrays/objects to JSON strings for storage
+        const interestsJson = interests ? JSON.stringify(interests) : null;
+        const skillsJson = skills ? JSON.stringify(skills) : null;
+        const socialLinksJson = social_links ? JSON.stringify(social_links) : null;
+
+        await query(
+            'UPDATE users SET name = $1, major = $2, bio = $3, quote = $4, interests = $5, skills = $6, social_links = $7 WHERE id = $8',
+            [name, major, bio, quote, interestsJson, skillsJson, socialLinksJson, req.user.id]
+        );
+        res.json({ success: true, message: 'Profile updated successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Upload profile image
+app.post('/api/users/profile/image', authenticateToken, upload.single('profileImage'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const imageUrl = `/uploads/${req.file.filename}`;
+    try {
+        await query('UPDATE users SET profile_image = $1 WHERE id = $2', [imageUrl, req.user.id]);
+        res.json({ success: true, imageUrl, message: 'Profile image uploaded successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Upload resume
+app.post('/api/users/profile/resume', authenticateToken, upload.single('resume'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const resumeUrl = `/uploads/${req.file.filename}`;
+    try {
+        await query('UPDATE users SET resume_url = $1 WHERE id = $2', [resumeUrl, req.user.id]);
+        res.json({ success: true, resumeUrl, message: 'Resume uploaded successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 

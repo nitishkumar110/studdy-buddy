@@ -1,7 +1,9 @@
 node_modules/
-*.db
-uploads/
 .env
+*.db
+*.sqlite
+*.sqlite3
+uploads/
 .DS_Store
 npm-debug.log
 .vscode/
