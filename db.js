@@ -93,7 +93,7 @@ const initDb = async () => {
             );
         `);
 
-        await query(`
+        await client.query(`
             CREATE TABLE IF NOT EXISTS group_messages (
                 id SERIAL PRIMARY KEY,
                 group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
