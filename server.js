@@ -677,6 +677,46 @@ app.post('/api/groups/:id/messages', authenticateToken, async (req, res) => {
     }
 });
 
+// Upload group message with file
+app.post('/api/groups/messages/with-file', authenticateToken, upload.single('file'), async (req, res) => {
+    const { groupId, content } = req.body;
+    const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    
+    if (!groupId) {
+        return res.status(400).json({ success: false, message: 'Group ID is required' });
+    }
+    
+    try {
+        const insertResult = await query(
+            'INSERT INTO group_messages (group_id, user_id, content, file_url) VALUES ($1, $2, $3, $4) RETURNING id, created_at',
+            [groupId, req.user.id, content || '', fileUrl]
+        );
+        
+        // Fetch user name
+        const userRes = await query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        const senderName = userRes.rows[0]?.name || 'Unknown';
+        
+        const newMessage = {
+            id: insertResult.rows[0].id,
+            group_id: parseInt(groupId),
+            user_id: req.user.id,
+            sender_id: req.user.id,
+            content: content || '',
+            file_url: fileUrl,
+            created_at: insertResult.rows[0].created_at,
+            sender_name: senderName
+        };
+
+        // Emit via socket to all group members
+        io.to(`group_${groupId}`).emit('new_group_message', newMessage);
+
+        res.json({ success: true, message: newMessage });
+    } catch (err) {
+        console.error('Error posting group file message:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 // --- BUDDIES ROUTE (Legacy) ---
 // Kept for backward compatibility if any old frontend code checks it, or just useful for debugging
 app.get('/api/buddies', async (req, res) => {
