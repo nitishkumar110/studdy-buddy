@@ -576,47 +576,100 @@ async function loadMessages(friendId) {
 // Send Message
 function sendMessage() {
     const messageInput = document.getElementById('messageInput');
+    if (!messageInput) return;
+    
     const content = messageInput.value.trim();
 
     // Check if we have an active chat (either friend or group)
     if (!content) return;
-    if (activeChatType === 'friend' && !activeChatUser) return;
-    if (activeChatType === 'group' && !activeChatGroup) return;
+    if (activeChatType === 'friend' && !activeChatUser) {
+        console.error('No active chat user');
+        return;
+    }
+    if (activeChatType === 'group' && !activeChatGroup) {
+        console.error('No active chat group');
+        return;
+    }
 
-    // Send via socket
+    // Send via socket for personal messages
     if (activeChatType === 'friend') {
+        if (!socket || !socket.connected) {
+            console.error('Socket not connected');
+            alert('Connection lost. Please refresh the page.');
+            return;
+        }
+        
         socket.emit('send_message', {
             senderId: currentUser.id,
             receiverId: activeChatUser.id,
             content: content
         });
-        // Create temporary message
+        
+        // Create temporary message for immediate display
         const tempMessage = {
             sender_id: currentUser.id,
             receiver_id: activeChatUser.id,
             content: content,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            sender_name: currentUser.name
         };
         appendMessage(tempMessage);
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+        scrollToBottom();
 
     } else if (activeChatType === 'group') {
-        // Send via API for groups (socket emission handled by server to ensure room delivery)
+        // Send via API for groups
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You are not logged in. Please login again.');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Create temporary message for immediate display
+        const tempMessage = {
+            group_id: activeChatGroup.id,
+            user_id: currentUser.id,
+            content: content,
+            created_at: new Date().toISOString(),
+            sender_name: currentUser.name
+        };
+        appendMessage(tempMessage);
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+        scrollToBottom();
+
+        // Send to server
         fetch(`/api/groups/${activeChatGroup.id}/messages`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ content })
-        }).catch(err => console.error(err));
-        // We will receive our own message via socket event 'new_group_message'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to send message');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Message sent successfully, socket will broadcast it
+            console.log('Group message sent:', data);
+        })
+        .catch(err => {
+            console.error('Error sending group message:', err);
+            alert('Failed to send message. Please try again.');
+            // Remove the temporary message on error
+            const messagesContainer = document.getElementById('chatMessages');
+            const lastMessage = messagesContainer.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains('message')) {
+                lastMessage.remove();
+            }
+        });
     }
-
-    // Clear input
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
-
-    scrollToBottom();
 }
 
 // Append Message
@@ -640,15 +693,24 @@ function appendMessage(message) {
 
 // Create Message HTML
 function createMessageHTML(message) {
-    const isSent = message.sender_id === currentUser.id;
+    // For group messages, check user_id instead of sender_id
+    const isSent = (message.sender_id === currentUser.id) || (message.user_id === currentUser.id);
     let initials = 'ME';
+    let senderName = '';
+    
     if (!isSent) {
         if (message.sender_name) {
+            senderName = message.sender_name;
             initials = message.sender_name.split(' ').map(n => n[0]).join('').toUpperCase();
-        } else if (activeChatUser) {
+        } else if (activeChatUser && activeChatType === 'friend') {
+            senderName = activeChatUser.name;
             initials = activeChatUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        } else if (activeChatType === 'group') {
+            senderName = message.sender_name || 'Unknown';
+            initials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
         }
     } else {
+        senderName = currentUser.name;
         initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
 
@@ -657,10 +719,14 @@ function createMessageHTML(message) {
         minute: '2-digit'
     });
 
+    // For group messages, show sender name
+    const senderLabel = (activeChatType === 'group' && !isSent) ? `<span class="sender-name">${escapeHtml(senderName)}</span>` : '';
+
     return `
         <div class="message ${isSent ? 'sent' : 'received'}">
             <div class="user-avatar">${initials}</div>
             <div class="message-content">
+                ${senderLabel}
                 <div class="message-bubble">${escapeHtml(message.content)}</div>
                 <div class="message-time">${time}</div>
             </div>

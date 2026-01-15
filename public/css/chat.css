@@ -274,6 +274,14 @@
     flex: 1;
 }
 
+.sender-name {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
 .message-bubble {
     background: var(--bg-card);
     padding: 0.75rem 1rem;

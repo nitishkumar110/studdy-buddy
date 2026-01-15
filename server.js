@@ -611,29 +611,36 @@ app.get('/api/groups/:id/messages', authenticateToken, async (req, res) => {
 app.post('/api/groups/:id/messages', authenticateToken, async (req, res) => {
     try {
         const { content } = req.body;
+        
+        if (!content || !content.trim()) {
+            return res.status(400).json({ success: false, message: 'Message content is required' });
+        }
+
         const insertResult = await query(
             'INSERT INTO group_messages (group_id, user_id, content) VALUES ($1, $2, $3) RETURNING id, created_at',
-            [req.params.id, req.user.id, content]
+            [req.params.id, req.user.id, content.trim()]
         );
+        
+        // Fetch user name
+        const userRes = await query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        const senderName = userRes.rows[0]?.name || 'Unknown';
+        
         const newMessage = {
             id: insertResult.rows[0].id,
-            group_id: req.params.id,
+            group_id: parseInt(req.params.id),
             user_id: req.user.id,
-            content,
+            sender_id: req.user.id, // Add for compatibility
+            content: content.trim(),
             created_at: insertResult.rows[0].created_at,
-            sender_name: req.user.name // We need to fetch this or attach it to req.user
+            sender_name: senderName
         };
 
-        // Improve name fetching
-        const userRes = await query('SELECT name FROM users WHERE id = $1', [req.user.id]);
-        newMessage.sender_name = userRes.rows[0].name;
-
-        // Emit via socket
+        // Emit via socket to all group members
         io.to(`group_${req.params.id}`).emit('new_group_message', newMessage);
 
         res.json({ success: true, message: newMessage });
     } catch (err) {
-        console.error(err);
+        console.error('Error posting group message:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
@@ -668,6 +675,11 @@ io.on('connection', (socket) => {
     socket.on('send_message', async (data) => {
         const { receiverId, content, senderId } = data;
 
+        if (!receiverId || !content || !senderId) {
+            console.error('Invalid message data:', data);
+            return;
+        }
+
         try {
             // Save to database
             const insertResult = await query(
@@ -688,10 +700,11 @@ io.on('connection', (socket) => {
             // Send to receiver
             io.to(`user_${receiverId}`).emit('new_message', message);
 
-            // Confirm to sender
-            socket.emit('message_sent', message);
+            // Also send to sender for confirmation (in case they need to see it)
+            io.to(`user_${senderId}`).emit('new_message', message);
         } catch (e) {
             console.error("Error saving socket message:", e);
+            socket.emit('message_error', { error: 'Failed to send message' });
         }
     });
 
