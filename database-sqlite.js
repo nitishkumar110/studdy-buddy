@@ -113,12 +113,20 @@ const initDb = async () => {
                 sender_id INTEGER NOT NULL,
                 receiver_id INTEGER NOT NULL,
                 content TEXT NOT NULL,
+                file_url TEXT,
                 read INTEGER DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
                 FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
             );
         `);
+        
+        // Add file_url column if it doesn't exist
+        try {
+            db.exec(`ALTER TABLE messages ADD COLUMN file_url TEXT;`);
+        } catch (e) {
+            // Column already exists, ignore
+        }
 
         // Groups table
         db.exec(`
@@ -143,11 +151,19 @@ const initDb = async () => {
                 group_id INTEGER NOT NULL,
                 user_id INTEGER NOT NULL,
                 content TEXT NOT NULL,
+                file_url TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
         `);
+        
+        // Add file_url column if it doesn't exist
+        try {
+            db.exec(`ALTER TABLE group_messages ADD COLUMN file_url TEXT;`);
+        } catch (e) {
+            // Column already exists, ignore
+        }
 
         // Notifications table
         db.exec(`

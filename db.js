@@ -74,9 +74,16 @@ const initDb = async () => {
                 sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 content TEXT NOT NULL,
+                file_url TEXT,
                 read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        `);
+        
+        // Add file_url column if it doesn't exist (for existing databases)
+        await client.query(`
+            ALTER TABLE messages 
+            ADD COLUMN IF NOT EXISTS file_url TEXT;
         `);
 
         await client.query(`
@@ -99,8 +106,15 @@ const initDb = async () => {
                 group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 content TEXT NOT NULL,
+                file_url TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        `);
+        
+        // Add file_url column if it doesn't exist (for existing databases)
+        await client.query(`
+            ALTER TABLE group_messages 
+            ADD COLUMN IF NOT EXISTS file_url TEXT;
         `);
 
         await client.query(`

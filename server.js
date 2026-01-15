@@ -494,6 +494,38 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
     }
 });
 
+// Upload message with file
+app.post('/api/messages/with-file', authenticateToken, upload.single('file'), async (req, res) => {
+    const { receiverId, content } = req.body;
+    const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    
+    try {
+        const insertResult = await query(
+            'INSERT INTO messages (sender_id, receiver_id, content, file_url) VALUES ($1, $2, $3, $4) RETURNING id',
+            [req.user.id, receiverId, content || '', fileUrl]
+        );
+        const messageId = insertResult.rows[0].id;
+
+        const messageResult = await query(`
+            SELECT m.*, u.name as sender_name
+            FROM messages m
+            JOIN users u ON m.sender_id = u.id
+            WHERE m.id = $1
+        `, [messageId]);
+        
+        const message = messageResult.rows[0];
+
+        // Emit to receiver and sender via socket
+        io.to(`user_${receiverId}`).emit('new_message', message);
+        io.to(`user_${req.user.id}`).emit('new_message', message);
+
+        res.json({ success: true, message });
+    } catch (err) {
+        console.error('Error sending file message:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 // --- NOTIFICATION ROUTES ---
 
 app.get('/api/notifications', authenticateToken, async (req, res) => {

@@ -6,6 +6,7 @@ let activeChatUser = null;
 let activeChatGroup = null;
 let activeChatType = 'friend'; // 'friend' or 'group'
 let typingTimeout = null;
+let selectedFile = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -219,14 +220,16 @@ async function openChat(friendId, friendName, friendMajor) {
             <div class="input-wrapper">
                 <textarea id="messageInput" placeholder="Type a message..." rows="1"></textarea>
                 <div class="input-actions">
-                    <button class="icon-btn">
+                    <label class="icon-btn" for="fileInput" title="Attach file">
                         <i class="fas fa-paperclip"></i>
-                    </button>
+                        <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt,.ppt,.pptx" style="display: none;">
+                    </label>
                     <button class="send-btn" id="sendBtn">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
             </div>
+            <div id="filePreview" class="file-preview-chat" style="display: none;"></div>
         </div>
     `;
 
@@ -389,6 +392,19 @@ function endCall() {
 function setupChatInput() {
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+
+    // File input handler
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                showFilePreview(file, filePreview);
+            }
+        });
+    }
 
     // Auto-resize textarea
     messageInput.addEventListener('input', () => {
@@ -423,6 +439,73 @@ function setupChatInput() {
     });
 
     sendBtn.addEventListener('click', sendMessage);
+}
+
+// Show file preview
+function showFilePreview(file, previewContainer) {
+    if (!previewContainer) return;
+    
+    const isImage = file.type.startsWith('image/');
+    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+    
+    if (isImage) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewContainer.innerHTML = `
+                <div class="file-preview-item">
+                    <img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                    <button onclick="removeFilePreview()" class="remove-file-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        const icon = getFileIcon(file.name);
+        previewContainer.innerHTML = `
+            <div class="file-preview-item">
+                <div class="file-info">
+                    <i class="${icon}"></i>
+                    <div>
+                        <p>${file.name}</p>
+                        <span>${fileSize} MB</span>
+                    </div>
+                </div>
+                <button onclick="removeFilePreview()" class="remove-file-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        previewContainer.style.display = 'block';
+    }
+}
+
+// Remove file preview
+window.removeFilePreview = function() {
+    selectedFile = null;
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    if (fileInput) fileInput.value = '';
+    if (filePreview) {
+        filePreview.innerHTML = '';
+        filePreview.style.display = 'none';
+    }
+}
+
+// Get file icon
+function getFileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const iconMap = {
+        'pdf': 'fas fa-file-pdf',
+        'doc': 'fas fa-file-word',
+        'docx': 'fas fa-file-word',
+        'txt': 'fas fa-file-alt',
+        'ppt': 'fas fa-file-powerpoint',
+        'pptx': 'fas fa-file-powerpoint'
+    };
+    return iconMap[ext] || 'fas fa-file';
 }
 
 // Load Groups
@@ -514,9 +597,14 @@ async function openGroup(groupId, groupName) {
             <div class="input-wrapper">
                 <textarea id="messageInput" placeholder="Type a message to group..." rows="1"></textarea>
                 <div class="input-actions">
+                    <label class="icon-btn" for="fileInput" title="Attach file">
+                        <i class="fas fa-paperclip"></i>
+                        <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt,.ppt,.pptx" style="display: none;">
+                    </label>
                     <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
+            <div id="filePreview" class="file-preview-chat" style="display: none;"></div>
         </div>
     `;
 
@@ -580,8 +668,8 @@ function sendMessage() {
     
     const content = messageInput.value.trim();
 
-    // Check if we have an active chat (either friend or group)
-    if (!content) return;
+    // Check if we have content or a file
+    if (!content && !selectedFile) return;
     if (activeChatType === 'friend' && !activeChatUser) {
         console.error('No active chat user');
         return;
@@ -591,7 +679,72 @@ function sendMessage() {
         return;
     }
 
-    // Send via socket for personal messages
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('You are not logged in. Please login again.');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // If file is selected, upload via API
+        if (selectedFile) {
+            const formData = new FormData();
+            formData.append('content', content || '');
+            formData.append('file', selectedFile);
+            
+            if (activeChatType === 'friend') {
+                // Send file message via API for personal messages
+                formData.append('receiverId', activeChatUser.id);
+                fetch('/api/messages/with-file', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Message will be received via socket
+                    messageInput.value = '';
+                    removeFilePreview();
+                } else {
+                    alert('Failed to send file: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error('Error sending file message:', err);
+                alert('Failed to send file. Please try again.');
+            });
+        } else if (activeChatType === 'group') {
+            // Send file message via API for groups
+            formData.append('groupId', activeChatGroup.id);
+            fetch('/api/groups/messages/with-file', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Message will be received via socket
+                    messageInput.value = '';
+                    removeFilePreview();
+                } else {
+                    alert('Failed to send file: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error('Error sending group file message:', err);
+                alert('Failed to send file. Please try again.');
+            });
+        }
+        return;
+    }
+
+    // Send text-only message (existing logic)
     if (activeChatType === 'friend') {
         if (!socket || !socket.connected) {
             console.error('Socket not connected');
@@ -619,14 +772,6 @@ function sendMessage() {
         scrollToBottom();
 
     } else if (activeChatType === 'group') {
-        // Send via API for groups
-        const token = localStorage.getItem('token');
-        if (!token) {
-            alert('You are not logged in. Please login again.');
-            window.location.href = 'login.html';
-            return;
-        }
-
         // Create temporary message for immediate display
         const tempMessage = {
             group_id: activeChatGroup.id,
@@ -656,13 +801,11 @@ function sendMessage() {
             return response.json();
         })
         .then(data => {
-            // Message sent successfully, socket will broadcast it
             console.log('Group message sent:', data);
         })
         .catch(err => {
             console.error('Error sending group message:', err);
             alert('Failed to send message. Please try again.');
-            // Remove the temporary message on error
             const messagesContainer = document.getElementById('chatMessages');
             const lastMessage = messagesContainer.lastElementChild;
             if (lastMessage && lastMessage.classList.contains('message')) {
@@ -722,12 +865,28 @@ function createMessageHTML(message) {
     // For group messages, show sender name
     const senderLabel = (activeChatType === 'group' && !isSent) ? `<span class="sender-name">${escapeHtml(senderName)}</span>` : '';
 
+    // Handle file attachments
+    let fileDisplay = '';
+    if (message.file_url) {
+        const ext = message.file_url.split('.').pop().toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+            // Image file
+            fileDisplay = `<div class="message-file"><img src="${message.file_url}" alt="Attachment" class="message-image" onclick="window.open('${message.file_url}', '_blank')"></div>`;
+        } else {
+            // Document file
+            const icon = getFileIcon(message.file_url);
+            const fileName = message.file_url.split('/').pop();
+            fileDisplay = `<div class="message-file"><a href="${message.file_url}" target="_blank" class="file-attachment"><i class="${icon}"></i><span>${escapeHtml(fileName)}</span></a></div>`;
+        }
+    }
+
     return `
         <div class="message ${isSent ? 'sent' : 'received'}">
             <div class="user-avatar">${initials}</div>
             <div class="message-content">
                 ${senderLabel}
-                <div class="message-bubble">${escapeHtml(message.content)}</div>
+                ${message.content ? `<div class="message-bubble">${escapeHtml(message.content)}</div>` : ''}
+                ${fileDisplay}
                 <div class="message-time">${time}</div>
             </div>
         </div>

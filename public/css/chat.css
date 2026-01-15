@@ -307,6 +307,98 @@
     padding: 0 0.5rem;
 }
 
+.message-file {
+    margin-top: 0.5rem;
+}
+
+.message-image {
+    max-width: 300px;
+    max-height: 300px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.message-image:hover {
+    transform: scale(1.02);
+}
+
+.file-attachment {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-body);
+    border-radius: 8px;
+    color: var(--text-main);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: var(--transition);
+}
+
+.file-attachment:hover {
+    background: var(--bg-card);
+    border-color: var(--primary);
+}
+
+.file-attachment i {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.file-preview-chat {
+    padding: 0.5rem;
+    background: var(--bg-body);
+    border-top: 1px solid var(--border);
+}
+
+.file-preview-item {
+    position: relative;
+    display: inline-block;
+}
+
+.file-preview-item .file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+}
+
+.file-preview-item .file-info i {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.file-preview-item .file-info p {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.file-preview-item .file-info span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.remove-file-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
 .typing-indicator {
     display: flex;
     gap: 0.75rem;
