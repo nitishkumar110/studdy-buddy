@@ -2,6 +2,8 @@
 
 let currentUser = null;
 let selectedImage = null;
+let selectedPdf = null;
+let selectedFile = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,23 +34,80 @@ function setupPostCreation() {
     const createBtn = document.getElementById('createPostBtn');
     const postContent = document.getElementById('postContent');
     const postImage = document.getElementById('postImage');
-    const imagePreview = document.getElementById('imagePreview');
+    const postPdf = document.getElementById('postPdf');
+    const postFile = document.getElementById('postFile');
+    const filePreview = document.getElementById('filePreview');
 
     // Image upload
     postImage.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
             selectedImage = file;
+            selectedPdf = null;
+            selectedFile = null;
+            postPdf.value = '';
+            postFile.value = '';
             const reader = new FileReader();
             reader.onload = (e) => {
-                imagePreview.innerHTML = `
-                    <img src="${e.target.result}" alt="Preview">
-                    <button class="remove-image" onclick="removeImage()">
-                        <i class="fas fa-times"></i>
-                    </button>
+                filePreview.innerHTML = `
+                    <div class="preview-item">
+                        <img src="${e.target.result}" alt="Preview">
+                        <button class="remove-file" onclick="removeFile('image')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 `;
             };
             reader.readAsDataURL(file);
+        }
+    });
+
+    // PDF upload
+    postPdf.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selectedPdf = file;
+            selectedImage = null;
+            selectedFile = null;
+            postImage.value = '';
+            postFile.value = '';
+            filePreview.innerHTML = `
+                <div class="preview-item">
+                    <div class="file-preview-icon">
+                        <i class="fas fa-file-pdf"></i>
+                        <p>${file.name}</p>
+                        <span>${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                    </div>
+                    <button class="remove-file" onclick="removeFile('pdf')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }
+    });
+
+    // Other file upload
+    postFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selectedFile = file;
+            selectedImage = null;
+            selectedPdf = null;
+            postImage.value = '';
+            postPdf.value = '';
+            const fileIcon = getFileIcon(file.name);
+            filePreview.innerHTML = `
+                <div class="preview-item">
+                    <div class="file-preview-icon">
+                        <i class="${fileIcon}"></i>
+                        <p>${file.name}</p>
+                        <span>${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                    </div>
+                    <button class="remove-file" onclick="removeFile('file')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
         }
     });
 
@@ -63,19 +122,42 @@ function setupPostCreation() {
     });
 }
 
-// Remove Image
-window.removeImage = function () {
-    selectedImage = null;
-    document.getElementById('postImage').value = '';
-    document.getElementById('imagePreview').innerHTML = '';
+// Get file icon based on extension
+function getFileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const iconMap = {
+        'doc': 'fas fa-file-word',
+        'docx': 'fas fa-file-word',
+        'txt': 'fas fa-file-alt',
+        'ppt': 'fas fa-file-powerpoint',
+        'pptx': 'fas fa-file-powerpoint',
+        'xls': 'fas fa-file-excel',
+        'xlsx': 'fas fa-file-excel'
+    };
+    return iconMap[ext] || 'fas fa-file';
+}
+
+// Remove File
+window.removeFile = function (type) {
+    if (type === 'image') {
+        selectedImage = null;
+        document.getElementById('postImage').value = '';
+    } else if (type === 'pdf') {
+        selectedPdf = null;
+        document.getElementById('postPdf').value = '';
+    } else if (type === 'file') {
+        selectedFile = null;
+        document.getElementById('postFile').value = '';
+    }
+    document.getElementById('filePreview').innerHTML = '';
 };
 
 // Create Post
 async function createPost() {
     const content = document.getElementById('postContent').value.trim();
 
-    if (!content && !selectedImage) {
-        alert('Please write something or add an image');
+    if (!content && !selectedImage && !selectedPdf && !selectedFile) {
+        alert('Please write something or add a file');
         return;
     }
 
@@ -89,16 +171,24 @@ async function createPost() {
     }
 
     const formData = new FormData();
-    formData.append('content', content);
+    formData.append('content', content || '');
+    
+    // Add file based on what was selected
     if (selectedImage) {
         formData.append('image', selectedImage);
+    } else if (selectedPdf) {
+        formData.append('file', selectedPdf);
+    } else if (selectedFile) {
+        formData.append('file', selectedFile);
     }
 
     try {
+        // Don't set Content-Type header - let browser set it with boundary for FormData
         const response = await fetch('/api/posts', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
+                // Note: Don't set Content-Type - browser will set it automatically for FormData
             },
             body: formData
         });
@@ -120,7 +210,9 @@ async function createPost() {
         if (data.success) {
             // Clear form
             document.getElementById('postContent').value = '';
-            removeImage();
+            removeFile('image');
+            removeFile('pdf');
+            removeFile('file');
 
             // Reload feed
             loadFeed();
@@ -189,6 +281,48 @@ function createPostCard(post) {
     const initials = post.name.split(' ').map(n => n[0]).join('').toUpperCase();
     const timeAgo = getTimeAgo(new Date(post.created_at));
     const isLiked = post.user_liked === 1;
+    
+    // Determine file type from extension
+    let fileDisplay = '';
+    if (post.image_url) {
+        const ext = post.image_url.split('.').pop().toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+            // Image file
+            fileDisplay = `<img src="${post.image_url}" alt="Post image" class="post-image">`;
+        } else if (ext === 'pdf') {
+            // PDF file
+            fileDisplay = `
+                <div class="post-file">
+                    <div class="file-preview-card">
+                        <i class="fas fa-file-pdf"></i>
+                        <div>
+                            <p>PDF Document</p>
+                            <a href="${post.image_url}" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="fas fa-download"></i> Download PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Other file types
+            const fileIcon = getFileIcon(post.image_url);
+            const fileName = post.image_url.split('/').pop();
+            fileDisplay = `
+                <div class="post-file">
+                    <div class="file-preview-card">
+                        <i class="${fileIcon}"></i>
+                        <div>
+                            <p>${fileName}</p>
+                            <a href="${post.image_url}" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="fas fa-download"></i> Download File
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
 
     return `
         <div class="post-card" data-post-id="${post.id}">
@@ -202,7 +336,7 @@ function createPostCard(post) {
             
             <div class="post-content">
                 <p class="post-text">${escapeHtml(post.content)}</p>
-                ${post.image_url ? `<img src="${post.image_url}" alt="Post image" class="post-image">` : ''}
+                ${fileDisplay}
             </div>
             
             <div class="post-stats">

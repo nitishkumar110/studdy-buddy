@@ -52,15 +52,25 @@
                             <textarea id="postContent" placeholder="What's on your mind?" rows="3"></textarea>
                         </div>
                         <div class="post-actions">
-                            <label class="upload-btn">
-                                <i class="fas fa-image"></i> Photo
-                                <input type="file" id="postImage" accept="image/*" hidden>
-                            </label>
+                            <div class="upload-buttons">
+                                <label class="upload-btn">
+                                    <i class="fas fa-image"></i> Photo
+                                    <input type="file" id="postImage" accept="image/*" hidden>
+                                </label>
+                                <label class="upload-btn">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                    <input type="file" id="postPdf" accept=".pdf,application/pdf" hidden>
+                                </label>
+                                <label class="upload-btn">
+                                    <i class="fas fa-file"></i> File
+                                    <input type="file" id="postFile" accept=".doc,.docx,.txt,.ppt,.pptx" hidden>
+                                </label>
+                            </div>
                             <button class="btn btn-primary" id="createPostBtn">
                                 <i class="fas fa-paper-plane"></i> Post
                             </button>
                         </div>
-                        <div id="imagePreview" class="image-preview"></div>
+                        <div id="filePreview" class="file-preview"></div>
                     </div>
 
                     <!-- Feed Posts -->

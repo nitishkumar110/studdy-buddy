@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const socketIO = require('socket.io');
 const multer = require('multer');
@@ -24,17 +25,27 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 // Initialize Database
 initDb().catch(console.error);
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Multer setup for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'public/uploads/');
+        cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage: storage });
+// Accept both 'image' and 'file' fields
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
 
 // Middleware
 app.use(cors());
@@ -325,14 +336,23 @@ app.delete('/api/friends/:friendId', authenticateToken, async (req, res) => {
 
 // --- POST ROUTES ---
 
-app.post('/api/posts', authenticateToken, upload.single('image'), async (req, res) => {
-    const { content } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+app.post('/api/posts', authenticateToken, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'file', maxCount: 1 }]), async (req, res) => {
+    const { content, fileType } = req.body;
+    let fileUrl = null;
+    
+    // Check for image upload
+    if (req.files && req.files['image'] && req.files['image'][0]) {
+        fileUrl = `/uploads/${req.files['image'][0].filename}`;
+    }
+    // Check for file upload (PDF or other files)
+    else if (req.files && req.files['file'] && req.files['file'][0]) {
+        fileUrl = `/uploads/${req.files['file'][0].filename}`;
+    }
 
     try {
         const insertResult = await query(
             'INSERT INTO posts (user_id, content, image_url) VALUES ($1, $2, $3) RETURNING id',
-            [req.user.id, content, imageUrl]
+            [req.user.id, content, fileUrl]
         );
         const postId = insertResult.rows[0].id;
 

@@ -238,9 +238,12 @@ async function openChat(friendId, friendName, friendMajor) {
         alert('Voice call coming soon! Try the video icon for now.');
     });
 
-    document.getElementById('videoCallBtn').addEventListener('click', () => {
-        startCall(true);
-    });
+    const videoCallBtn = document.getElementById('videoCallBtn');
+    if (videoCallBtn) {
+        videoCallBtn.addEventListener('click', () => {
+            startCall(true);
+        });
+    }
 
     // Load messages
     loadMessages(friendId);
@@ -263,7 +266,7 @@ async function startCall(isVideo) {
 
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
-        document.getElementById('localVideo').srcObject = localStream;
+        // Local video preview removed as per user request
     } catch (err) {
         console.error('Error accessing media:', err);
         alert('Could not access camera/microphone');
@@ -346,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('localVideo').srcObject = localStream;
+            // Local video preview removed as per user request
         } catch (err) {
             console.error('Error accessing media:', err);
             return;
