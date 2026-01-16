@@ -236,156 +236,23 @@ async function openChat(friendId, friendName, friendMajor) {
     // Setup chat input
     setupChatInput();
 
-    // Setup call buttons
-    document.getElementById('voiceCallBtn').addEventListener('click', () => {
-        alert('Voice call coming soon! Try the video icon for now.');
-    });
+    // Setup call buttons - show coming soon messages
+    const voiceCallBtn = document.getElementById('voiceCallBtn');
+    if (voiceCallBtn) {
+        voiceCallBtn.addEventListener('click', () => {
+            alert('Voice call feature coming soon!');
+        });
+    }
 
     const videoCallBtn = document.getElementById('videoCallBtn');
     if (videoCallBtn) {
         videoCallBtn.addEventListener('click', () => {
-            startCall(true);
+            alert('Video call feature coming soon!');
         });
     }
 
     // Load messages
     loadMessages(friendId);
-}
-
-// --- WebRTC Video Call Logic ---
-let peerConnection;
-let localStream;
-let remoteStream;
-const rtcConfig = {
-    iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' } // Use Google's public STUN server
-    ]
-};
-
-async function startCall(isVideo) {
-    if (!activeChatUser) return;
-
-    document.getElementById('videoCallModal').style.display = 'block';
-
-    try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
-        // Local video preview removed as per user request
-    } catch (err) {
-        console.error('Error accessing media:', err);
-        alert('Could not access camera/microphone');
-        return;
-    }
-
-    createPeerConnection();
-
-    // Add local tracks to connection
-    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-    // Create Offer
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-
-    // Send Offer
-    socket.emit('call_user', {
-        userToCall: activeChatUser.id,
-        signalData: offer,
-        from: currentUser.id,
-        name: currentUser.name
-    });
-}
-
-function createPeerConnection() {
-    peerConnection = new RTCPeerConnection(rtcConfig);
-
-    peerConnection.onicecandidate = (event) => {
-        if (event.candidate && activeChatUser) {
-            socket.emit('ice_candidate', {
-                to: activeChatUser.id,
-                candidate: event.candidate
-            });
-        }
-    };
-
-    peerConnection.ontrack = (event) => {
-        document.getElementById('remoteVideo').srcObject = event.streams[0];
-    };
-}
-
-// Update Listeners for Call Events
-const originalSetupListeners = setupSocketListeners;
-setupSocketListeners = function () {
-    originalSetupListeners(); // Call original handlers
-
-    socket.on('call_user', async (data) => {
-        // Incoming Call
-        activeChatUser = { id: data.from, name: data.name }; // Set caller as active context
-        const popup = document.getElementById('incomingCallPopup');
-        document.getElementById('callerName').textContent = data.name;
-        popup.classList.remove('hidden');
-        document.getElementById('videoCallModal').style.display = 'block';
-
-        // Store offer to answer later
-        window.incomingOffer = data.signal;
-    });
-
-    socket.on('call_accepted', async (signal) => {
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
-    });
-
-    socket.on('ice_candidate', async (candidate) => {
-        if (peerConnection) {
-            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        }
-    });
-
-    socket.on('call_rejected', () => {
-        alert('Call rejected');
-        endCall();
-    });
-};
-
-// Handle Incoming Call UI Actions
-document.addEventListener('DOMContentLoaded', () => {
-    // Add these inside the existing DOMContentLoaded or append here
-    document.getElementById('acceptCallBtn')?.addEventListener('click', async () => {
-        document.getElementById('incomingCallPopup').classList.add('hidden');
-
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            // Local video preview removed as per user request
-        } catch (err) {
-            console.error('Error accessing media:', err);
-            return;
-        }
-
-        createPeerConnection();
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(window.incomingOffer));
-
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-
-        socket.emit('answer_call', {
-            signal: answer,
-            to: activeChatUser.id
-        });
-    });
-
-    document.getElementById('rejectCallBtn')?.addEventListener('click', () => {
-        socket.emit('reject_call', { to: activeChatUser.id });
-        document.getElementById('videoCallModal').style.display = 'none';
-        document.getElementById('incomingCallPopup').classList.add('hidden');
-    });
-
-    document.getElementById('endCallBtn')?.addEventListener('click', endCall);
-});
-
-function endCall() {
-    if (peerConnection) peerConnection.close();
-    if (localStream) localStream.getTracks().forEach(track => track.stop());
-    document.getElementById('videoCallModal').style.display = 'none';
-    location.reload(); // Simple cleanup
 }
 
 // Setup Chat Input
@@ -444,10 +311,10 @@ function setupChatInput() {
 // Show file preview
 function showFilePreview(file, previewContainer) {
     if (!previewContainer) return;
-    
+
     const isImage = file.type.startsWith('image/');
     const fileSize = (file.size / 1024 / 1024).toFixed(2);
-    
+
     if (isImage) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -483,7 +350,7 @@ function showFilePreview(file, previewContainer) {
 }
 
 // Remove file preview
-window.removeFilePreview = function() {
+window.removeFilePreview = function () {
     selectedFile = null;
     const fileInput = document.getElementById('fileInput');
     const filePreview = document.getElementById('filePreview');
@@ -665,7 +532,7 @@ async function loadMessages(friendId) {
 function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     if (!messageInput) return;
-    
+
     const content = messageInput.value.trim();
 
     // Check if we have content or a file
@@ -687,35 +554,35 @@ function sendMessage() {
     }
 
     // If file is selected, upload via API
-        if (selectedFile) {
-            const formData = new FormData();
-            formData.append('content', content || '');
-            formData.append('file', selectedFile);
-            
-            if (activeChatType === 'friend') {
-                // Send file message via API for personal messages
-                formData.append('receiverId', activeChatUser.id);
-                fetch('/api/messages/with-file', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Message will be received via socket
-                    messageInput.value = '';
-                    removeFilePreview();
-                } else {
-                    alert('Failed to send file: ' + (data.message || 'Unknown error'));
-                }
+    if (selectedFile) {
+        const formData = new FormData();
+        formData.append('content', content || '');
+        formData.append('file', selectedFile);
+
+        if (activeChatType === 'friend') {
+            // Send file message via API for personal messages
+            formData.append('receiverId', activeChatUser.id);
+            fetch('/api/messages/with-file', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
             })
-            .catch(err => {
-                console.error('Error sending file message:', err);
-                alert('Failed to send file. Please try again.');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Message will be received via socket
+                        messageInput.value = '';
+                        removeFilePreview();
+                    } else {
+                        alert('Failed to send file: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(err => {
+                    console.error('Error sending file message:', err);
+                    alert('Failed to send file. Please try again.');
+                });
         } else if (activeChatType === 'group') {
             // Send file message via API for groups
             formData.append('groupId', activeChatGroup.id);
@@ -726,20 +593,20 @@ function sendMessage() {
                 },
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Message will be received via socket
-                    messageInput.value = '';
-                    removeFilePreview();
-                } else {
-                    alert('Failed to send file: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(err => {
-                console.error('Error sending group file message:', err);
-                alert('Failed to send file. Please try again.');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Message will be received via socket
+                        messageInput.value = '';
+                        removeFilePreview();
+                    } else {
+                        alert('Failed to send file: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(err => {
+                    console.error('Error sending group file message:', err);
+                    alert('Failed to send file. Please try again.');
+                });
         }
         return;
     }
@@ -751,13 +618,13 @@ function sendMessage() {
             alert('Connection lost. Please refresh the page.');
             return;
         }
-        
+
         socket.emit('send_message', {
             senderId: currentUser.id,
             receiverId: activeChatUser.id,
             content: content
         });
-        
+
         // Create temporary message for immediate display
         const tempMessage = {
             sender_id: currentUser.id,
@@ -794,24 +661,24 @@ function sendMessage() {
             },
             body: JSON.stringify({ content })
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to send message');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Group message sent:', data);
-        })
-        .catch(err => {
-            console.error('Error sending group message:', err);
-            alert('Failed to send message. Please try again.');
-            const messagesContainer = document.getElementById('chatMessages');
-            const lastMessage = messagesContainer.lastElementChild;
-            if (lastMessage && lastMessage.classList.contains('message')) {
-                lastMessage.remove();
-            }
-        });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Group message sent:', data);
+            })
+            .catch(err => {
+                console.error('Error sending group message:', err);
+                alert('Failed to send message. Please try again.');
+                const messagesContainer = document.getElementById('chatMessages');
+                const lastMessage = messagesContainer.lastElementChild;
+                if (lastMessage && lastMessage.classList.contains('message')) {
+                    lastMessage.remove();
+                }
+            });
     }
 }
 
@@ -840,7 +707,7 @@ function createMessageHTML(message) {
     const isSent = (message.sender_id === currentUser.id) || (message.user_id === currentUser.id);
     let initials = 'ME';
     let senderName = '';
-    
+
     if (!isSent) {
         if (message.sender_name) {
             senderName = message.sender_name;
