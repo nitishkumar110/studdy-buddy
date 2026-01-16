@@ -34,7 +34,13 @@ function selectMentor(persona) {
     // Clear Chat or Add Divider (Optional)
     // For now, let's just clear and show new welcome
     chatMessages.innerHTML = '';
-    addMessage('bot', `Switched to ${config.name}. How can I help you?`);
+
+    // Enhanced welcome message for CS mentor
+    if (persona === 'cs') {
+        addMessage('bot', `👋 Hello! I'm your Computer Science Mentor. I can help you with:\n\n• Basics: Variables, loops, functions, data types\n• Data Structures: Arrays, objects, stacks, queues, trees\n• OOP: Classes, inheritance, encapsulation\n• Algorithms: Sorting, searching, Big O notation\n• Web Dev: HTML, CSS, JavaScript, React, Node.js\n• Best Practices: Debugging, error handling, Git\n\nTry asking: "What are variables?" or "Explain Big O notation" or click a topic below!`);
+    } else {
+        addMessage('bot', `Switched to ${config.name}. How can I help you?`);
+    }
 }
 
 // Send Message
@@ -111,3 +117,9 @@ function addMessage(sender, text) {
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
+
+// Function to handle topic button clicks
+function askTopic(question) {
+    chatInput.value = question;
+    sendMessage();
+}

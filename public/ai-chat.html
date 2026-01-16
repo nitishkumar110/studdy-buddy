@@ -191,6 +191,13 @@
                 height: calc(100vh - 150px);
             }
         }
+
+        .topic-btn:hover {
+            background: var(--primary) !important;
+            color: white !important;
+            border-color: var(--primary) !important;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 
@@ -271,8 +278,14 @@
                     <div class="mentor-avatar" id="current-mentor-avatar" style="background: #4F46E5; color: white;"><i
                             class="fa-solid fa-code"></i></div>
                     <div class="msg-content">
-                        Hello! I am your Computer Science Mentor. Ask me about algorithms, web development, or study
-                        resources!
+                        👋 Hello! I'm your Computer Science Mentor. I can help you with:<br><br>
+                        • <strong>Basics:</strong> Variables, loops, functions, data types<br>
+                        • <strong>Data Structures:</strong> Arrays, objects, stacks, queues, trees<br>
+                        • <strong>OOP:</strong> Classes, inheritance, encapsulation<br>
+                        • <strong>Algorithms:</strong> Sorting, searching, Big O notation<br>
+                        • <strong>Web Dev:</strong> HTML, CSS, JavaScript, React, Node.js<br>
+                        • <strong>Best Practices:</strong> Debugging, error handling, Git<br><br>
+                        Try asking: "What are variables?" or "Explain Big O notation" or click a topic below!
                     </div>
                 </div>
             </div>
@@ -280,10 +293,43 @@
             <div class="typing-indicator" id="typing-indicator">Mentor is thinking...</div>
 
             <div class="chat-input-area">
-                <input type="text" id="chat-input" class="chat-input" placeholder="Ask a question..."
-                    autocomplete="off">
-                <button class="btn btn-primary icon-btn" onclick="sendMessage()"><i
-                        class="fa-solid fa-paper-plane"></i></button>
+                <div style="display: flex; flex-direction: column; width: 100%; gap: 0.75rem;">
+                    <!-- Topic Suggestions -->
+                    <div id="topic-suggestions" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0 0.5rem;">
+                        <button class="topic-btn" onclick="askTopic('What are variables?')"
+                            style="padding: 0.4rem 0.8rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; font-size: 0.85rem; transition: var(--transition);">
+                            💡 Variables
+                        </button>
+                        <button class="topic-btn" onclick="askTopic('Explain loops')"
+                            style="padding: 0.4rem 0.8rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; font-size: 0.85rem; transition: var(--transition);">
+                            🔄 Loops
+                        </button>
+                        <button class="topic-btn" onclick="askTopic('What are arrays?')"
+                            style="padding: 0.4rem 0.8rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; font-size: 0.85rem; transition: var(--transition);">
+                            📊 Arrays
+                        </button>
+                        <button class="topic-btn" onclick="askTopic('Explain OOP')"
+                            style="padding: 0.4rem 0.8rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; font-size: 0.85rem; transition: var(--transition);">
+                            🎯 OOP
+                        </button>
+                        <button class="topic-btn" onclick="askTopic('What is Big O notation?')"
+                            style="padding: 0.4rem 0.8rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; font-size: 0.85rem; transition: var(--transition);">
+                            ⚡ Big O
+                        </button>
+                        <button class="topic-btn" onclick="askTopic('Debugging tips')"
+                            style="padding: 0.4rem 0.8rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; font-size: 0.85rem; transition: var(--transition);">
+                            🐛 Debugging
+                        </button>
+                    </div>
+
+                    <!-- Input Row -->
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <input type="text" id="chat-input" class="chat-input" placeholder="Ask a question..."
+                            autocomplete="off">
+                        <button class="btn btn-primary icon-btn" onclick="sendMessage()"><i
+                                class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
